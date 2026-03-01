@@ -1,0 +1,376 @@
+{% load static %}
+<!doctype html>
+<html lang="es" class="h-full bg-slate-50">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Crea tu Tienda - PrintFlow</title>
+    <!-- Tailwind CSS (via CDN para MVP) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+      }
+    </style>
+  </head>
+  <body class="bg-white min-h-screen flex">
+    <!-- Columna Izquierda: Branding (Oculta en móviles) -->
+    <div
+      class="hidden lg:flex lg:w-1/2 bg-blue-600 relative overflow-hidden flex-col justify-between p-12"
+    >
+      <!-- Background Shapes -->
+      <div
+        class="absolute top-0 left-0 w-full h-full overflow-hidden -z-0 pointer-events-none"
+      >
+        <div
+          class="absolute -top-40 -right-40 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50"
+        ></div>
+        <div
+          class="absolute top-40 -left-20 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-50"
+        ></div>
+        <div
+          class="absolute bottom-0 right-10 w-80 h-80 bg-blue-700 rounded-full mix-blend-multiply filter blur-3xl opacity-50"
+        ></div>
+      </div>
+
+      <div class="relative z-10">
+        <a
+          href="{% url 'index' %}"
+          class="inline-flex items-center gap-2 group"
+        >
+          <div
+            class="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform"
+          >
+            <svg
+              class="w-6 h-6 text-blue-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2.5"
+                d="M13 10V3L4 14h7v7l9-11h-7z"
+              ></path>
+            </svg>
+          </div>
+          <span class="text-2xl font-bold tracking-tight text-white"
+            >PrintFlow</span
+          >
+        </a>
+      </div>
+
+      <div class="relative z-10 mb-20">
+        <h1
+          class="text-5xl font-extrabold text-white tracking-tight mb-6 leading-tight"
+        >
+          Tu imprenta, <br /><span class="text-blue-200">100% digital.</span>
+        </h1>
+        <p class="text-xl text-blue-100 font-medium max-w-md leading-relaxed">
+          Digitaliza tus servicios gráficos sin invertir en maquinaria. Conecta
+          con talleres, gestiona pedidos y obtén tu propio catálogo e-commerce
+          en minutos.
+        </p>
+
+        <div class="mt-12 space-y-4">
+          <div class="flex items-center gap-4 text-blue-100">
+            <div
+              class="w-8 h-8 rounded-full bg-blue-500/30 flex items-center justify-center shrink-0"
+            >
+              <svg
+                class="w-5 h-5 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 13l4 4L19 7"
+                ></path>
+              </svg>
+            </div>
+            <span class="font-medium">Catálogo E-commerce propio</span>
+          </div>
+          <div class="flex items-center gap-4 text-blue-100">
+            <div
+              class="w-8 h-8 rounded-full bg-blue-500/30 flex items-center justify-center shrink-0"
+            >
+              <svg
+                class="w-5 h-5 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 13l4 4L19 7"
+                ></path>
+              </svg>
+            </div>
+            <span class="font-medium">Pagos divididos transparentes</span>
+          </div>
+          <div class="flex items-center gap-4 text-blue-100">
+            <div
+              class="w-8 h-8 rounded-full bg-blue-500/30 flex items-center justify-center shrink-0"
+            >
+              <svg
+                class="w-5 h-5 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 13l4 4L19 7"
+                ></path>
+              </svg>
+            </div>
+            <span class="font-medium"
+              >Panel de administración en tiempo real</span
+            >
+          </div>
+        </div>
+      </div>
+
+      <div class="relative z-10 text-blue-200 text-sm font-medium">
+        © 2026 PrintFlow. Todos los derechos reservados.
+      </div>
+    </div>
+
+    <!-- Columna Derecha: Formulario Scrollable -->
+    <div
+      class="w-full lg:w-1/2 flex flex-col bg-slate-50 relative overflow-y-auto min-h-screen"
+    >
+      <!-- Decoración móvil -->
+      <div
+        class="lg:hidden absolute top-0 left-0 w-full h-48 bg-blue-600 rounded-b-[3rem] -z-0"
+      ></div>
+
+      <div
+        class="flex-1 flex flex-col justify-center items-center p-6 sm:p-12 relative z-10 w-full max-w-2xl mx-auto my-auto"
+      >
+        <!-- Logo Móvil -->
+        <div class="lg:hidden mb-10 w-full flex justify-center">
+          <a
+            href="{% url 'index' %}"
+            class="inline-flex items-center gap-2 group bg-white/10 backdrop-blur-md px-4 py-2 rounded-2xl"
+          >
+            <div
+              class="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg"
+            >
+              <svg
+                class="w-6 h-6 text-blue-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2.5"
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                ></path>
+              </svg>
+            </div>
+            <span class="text-2xl font-bold tracking-tight text-white"
+              >PrintFlow</span
+            >
+          </a>
+        </div>
+
+        <div
+          class="w-full bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 p-8 sm:p-10 relative"
+        >
+          <div class="mb-8">
+            <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">
+              Crea tu Tienda
+            </h2>
+            <p class="mt-2 text-slate-500 text-sm font-medium">
+              Completa tus datos y comienza a vender online en minutos.
+            </p>
+          </div>
+
+          <!-- Alertas Flash -->
+          {% if messages %}
+          <div class="mb-6 space-y-3">
+            {% for message in messages %}
+            <div
+              class="p-4 text-sm font-medium rounded-xl flex items-start gap-3 {% if message.tags == 'error' %}bg-red-50 text-red-700 border border-red-200{% else %}bg-green-50 text-green-700 border border-green-200{% endif %}"
+              role="alert"
+            >
+              {% if message.tags == 'error' %}
+              <svg
+                class="w-5 h-5 shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                ></path>
+              </svg>
+              {% else %}
+              <svg
+                class="w-5 h-5 shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                ></path>
+              </svg>
+              {% endif %}
+              <span>{{ message }}</span>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          <form action="{% url 'registro' %}" method="POST" class="space-y-5">
+            {% csrf_token %}
+
+            <!-- Errores Globales -->
+            {% if form.non_field_errors %}
+            <div
+              class="p-4 bg-red-50 rounded-xl border border-red-200 text-sm font-medium text-red-700 mb-6 flex items-start gap-3"
+            >
+              <svg
+                class="w-5 h-5 shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                ></path>
+              </svg>
+              <span>{{ form.non_field_errors }}</span>
+            </div>
+            {% endif %}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {% for field in form %}
+              <!-- Hacemos que la contraseña, email y nombre ocupen todo el ancho o lo cuadramos según el campo -->
+              <div
+                class="{% if field.name in 'email,password,confirm_password,nombre_tienda' %}md:col-span-2{% else %}col-span-1{% endif %}"
+              >
+                <label
+                  for="{{ field.id_for_label }}"
+                  class="block text-sm font-bold text-slate-700 mb-1.5 ml-1"
+                >
+                  {{ field.label }}
+                </label>
+
+                {{ field }} {% if field.help_text %}
+                <p class="mt-1.5 ml-1 text-xs text-slate-500 font-medium">
+                  {{ field.help_text }}
+                </p>
+                {% endif %} {% if field.errors %}
+                <div
+                  class="mt-1.5 ml-1 text-xs text-red-600 font-medium space-y-1"
+                >
+                  {% for error in field.errors %}
+                  <p class="flex items-center gap-1">
+                    <svg
+                      class="w-3 h-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      ></path>
+                    </svg>
+                    {{ error }}
+                  </p>
+                  {% endfor %}
+                </div>
+                {% endif %}
+              </div>
+              {% endfor %}
+            </div>
+
+            <button
+              type="submit"
+              class="w-full flex justify-center py-4 px-4 border border-transparent rounded-xl shadow-lg shadow-blue-200 text-base font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all hover:-translate-y-0.5 mt-8 md:col-span-2"
+            >
+              Registrar mi Tienda
+            </button>
+          </form>
+        </div>
+
+        <p
+          class="mt-8 text-center text-sm font-medium text-slate-500 relative z-10 pb-8"
+        >
+          ¿Ya eres parte de la red?
+          <a
+            href="{% url 'login' %}"
+            class="font-bold text-blue-600 hover:text-blue-700 hover:underline transition-all"
+          >
+            Inicia Sesión aquí
+          </a>
+        </p>
+      </div>
+    </div>
+
+    <!-- Script de Dropdown en Cascada Región -> Comuna -->
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const regionSelect = document.getElementById("id_region");
+        const comunaSelect = document.getElementById("id_comuna");
+
+        if (regionSelect && comunaSelect) {
+          regionSelect.addEventListener("change", function () {
+            const regionId = this.value;
+            comunaSelect.innerHTML =
+              '<option value="">Cargando comunas...</option>';
+
+            if (regionId) {
+              fetch(`/api/comunas/?region_id=${regionId}`)
+                .then((response) => response.json())
+                .then((data) => {
+                  comunaSelect.innerHTML =
+                    '<option value="">Selecciona una comuna</option>';
+                  data.comunas.forEach((comuna) => {
+                    comunaSelect.innerHTML += `<option value="${comuna.id}">${comuna.nombre}</option>`;
+                  });
+                })
+                .catch((error) => {
+                  console.error("Error fetching comunas:", error);
+                  comunaSelect.innerHTML =
+                    '<option value="">Error cargando comunas</option>';
+                });
+            } else {
+              comunaSelect.innerHTML =
+                '<option value="">Selecciona una comuna</option>';
+            }
+          });
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="es" class="h-full bg-gray-50">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Buscar Imprentas en PrintFlow</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Outfit", sans-serif;
+      }
+    </style>
+  </head>
+  <body class="h-full flex flex-col">
+    <!-- Navbar Superior -->
+    <nav class="bg-white border-b border-gray-200 sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+          <div class="flex">
+            <a href="{% url 'index' %}" class="flex-shrink-0 flex items-center">
+              <span
+                class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-blue-500 tracking-tight"
+                >PrintFlow</span
+              >
+              <span
+                class="ml-2 text-sm text-gray-500 font-medium px-2 py-1 rounded-md bg-gray-100 uppercase tracking-widest hidden sm:block"
+                >Marketplace</span
+              >
+            </a>
+          </div>
+          <div class="flex items-center space-x-4">
+            <a
+              href="{% url 'login' %}"
+              class="text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors"
+              >Soy Imprenta</a
+            >
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Header / Buscador -->
+    <div class="bg-white shadow">
+      <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <h1 class="text-3xl font-extrabold text-gray-900 text-center mb-6">
+          Encuentra imprentas de calidad certificada
+        </h1>
+
+        <form
+          method="GET"
+          action="{% url 'buscar' %}"
+          class="max-w-3xl mx-auto"
+        >
+          <div
+            class="flex flex-col sm:flex-row shadow-sm rounded-xl overflow-hidden border border-gray-200 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 transition-all"
+          >
+            <div
+              class="flex-1 min-w-0 bg-white px-4 py-3 flex items-center border-b sm:border-b-0 sm:border-r border-gray-200"
+            >
+              <svg
+                class="h-5 w-5 text-gray-400 mr-3"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+              <input
+                type="text"
+                name="q"
+                id="q"
+                value="{{ query }}"
+                class="focus:outline-none block w-full text-base placeholder-gray-500 text-gray-900"
+                placeholder="¿Qué necesitas imprimir? (Ej: Tarjetas)"
+              />
+            </div>
+            <div
+              class="sm:w-1/3 min-w-0 bg-white px-4 py-3 flex items-center border-b sm:border-b-0 sm:border-r border-gray-200"
+            >
+              <svg
+                class="h-5 w-5 text-gray-400 mr-3"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+              <input
+                type="text"
+                name="comuna"
+                id="comuna"
+                value="{{ comuna_cliente }}"
+                class="focus:outline-none block w-full text-base placeholder-gray-500 text-gray-900"
+                placeholder="Tu comuna (Ej: Santiago)"
+              />
+            </div>
+            <button
+              type="submit"
+              class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 transition-colors flex items-center justify-center"
+            >
+              Buscar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Resultados -->
+    <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+      {% if query %}
+      <div class="mb-6">
+        <h2 class="text-xl font-semibold text-gray-900">
+          Resultados para "<span class="text-indigo-600">{{ query }}</span>"
+          <!-- prettier-ignore -->
+          {% if comuna_cliente %}
+          en <span class="capitalize">{{ comuna_cliente }}</span>
+          {% endif %}
+        </h2>
+        <p class="text-sm text-gray-500 mt-1">
+          Ordenados por calidad, proximidad y valor asegurado.
+        </p>
+      </div>
+
+      {% if resultados %}
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for item in resultados %}
+        <div
+          class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow group relative flex flex-col h-full"
+        >
+          <!-- Header Card (Tags) -->
+          <div class="p-5 pb-0 flex flex-wrap gap-2 mb-3">
+            {% if item.tienda.taller_fisico %}
+            <span
+              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200"
+            >
+              <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fill-rule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+              Proveedor Verificado
+            </span>
+            {% endif %} {% if item.es_local %}
+            <span
+              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-800 border border-green-200"
+            >
+              ¡Cerca de ti!
+            </span>
+            {% endif %}
+
+            <!-- PrintScore Visual -->
+            <div
+              class="ml-auto flex items-center bg-gray-50 px-2 py-0.5 rounded-full border border-gray-200"
+            >
+              <svg
+                class="text-yellow-400 w-3 h-3 mr-1"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                ></path>
+              </svg>
+              <span class="text-xs font-bold text-gray-700"
+                >{{ item.tienda.puntaje_global }}</span
+              >
+            </div>
+          </div>
+
+          <!-- Body Card -->
+          <div class="px-5 py-2 flex-grow">
+            <h3
+              class="text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors"
+            >
+              {{ item.producto.metadatos.nombre|default:"Producto" }}
+            </h3>
+            <p class="text-sm text-gray-500 mt-1 line-clamp-2">
+              {{ item.producto.metadatos.descripcion|default:"Impresión de alta
+              calidad garantizada." }}
+            </p>
+
+            <div class="mt-4 flex items-center">
+              <div
+                class="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs uppercase border border-indigo-200"
+              >
+                {{ item.tienda.nombre_tienda|make_list|first }}
+              </div>
+              <div class="ml-2">
+                <p class="text-sm font-semibold text-gray-900">
+                  {{ item.tienda.nombre_tienda }}
+                </p>
+                <p class="text-xs text-gray-400">
+                  {{ item.tienda.comuna_base|default:"Chile" }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer Card (Precio y Acción) -->
+          <div
+            class="px-5 py-4 bg-gray-50 border-t border-gray-100 mt-4 flex items-center justify-between"
+          >
+            <div>
+              <p
+                class="text-xs text-gray-500 font-medium uppercase tracking-wider"
+              >
+                Precio Final
+              </p>
+              <p class="text-2xl font-extrabold text-gray-900">
+                ${{ item.producto.precio_final|floatformat:0 }}
+              </p>
+            </div>
+            <a
+              href="{{ request.scheme }}://{{ item.tienda.subdominio }}.localhost:8000"
+              target="_blank"
+              class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-bold rounded-xl shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+            >
+              Ver y Comprar
+            </a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div
+        class="text-center py-20 bg-white rounded-2xl border border-gray-200 border-dashed"
+      >
+        <svg
+          class="mx-auto h-12 w-12 text-gray-300"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">
+          No se encontraron productos
+        </h3>
+        <p class="mt-1 text-sm text-gray-500">
+          Prueba buscando con otros términos o en otra comuna.
+        </p>
+      </div>
+      {% endif %} {% else %}
+      <!-- Estado Vacío (Sin búsqueda aún) -->
+      <div class="text-center py-16">
+        <div
+          class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-50 mb-6"
+        >
+          <svg
+            class="w-8 h-8 text-indigo-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+            ></path>
+          </svg>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-900 mb-2">
+          Comienza tu búsqueda
+        </h2>
+        <p class="text-gray-500 max-w-lg mx-auto">
+          Ingresa lo que necesitas imprimir arriba. Te mostraremos las mejores
+          imprentas verificadas ordenadas por calidad y conveniencia local.
+        </p>
+      </div>
+      {% endif %}
+    </main>
+  </body>
+</html>

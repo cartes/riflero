@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "skills": {
+    "django-expert": {
+      "source": "vintasoftware/django-ai-plugins",
+      "sourceType": "github",
+      "computedHash": "a6b8c224017570496d688a526fcbea74025a01cc90d9afb0977bfcc1f76af306"
+    },
+    "mercadopago-integration": {
+      "source": "martinacostadev/mercadopago-integration",
+      "sourceType": "github",
+      "computedHash": "d7e09fc93987764d4988fa5ebcc16d891d6dd65a1a7580256007c77eb12ff311"
+    },
+    "tailwind-design-system": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "computedHash": "d0e4d2ba5a99cdc6e264d3927d1d81e85e79f551c8e246fa0a86123217eaad94"
+    }
+  }
+}

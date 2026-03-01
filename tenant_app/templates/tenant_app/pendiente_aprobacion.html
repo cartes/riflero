@@ -1,0 +1,141 @@
+{% load static %}
+<!doctype html>
+<html lang="es" class="h-full bg-slate-50">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>En Revisión - PrintFlow</title>
+    <!-- Tailwind CSS (via CDN para MVP) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+      }
+    </style>
+  </head>
+  <body class="h-full flex items-center justify-center p-4">
+    <div class="max-w-lg w-full text-center">
+      <div
+        class="bg-white p-10 md:p-12 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 relative overflow-hidden"
+      >
+        <!-- Icono Ilustrativo animado "En Progreso" -->
+        <div
+          class="mx-auto w-24 h-24 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mb-8 shadow-inner relative"
+        >
+          <!-- Anillo palpitante (Ping) -->
+          <div
+            class="absolute inset-0 bg-amber-400 rounded-full animate-ping opacity-20"
+          ></div>
+          <svg
+            class="w-12 h-12 relative z-10"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+            ></path>
+          </svg>
+        </div>
+
+        <h1 class="text-3xl font-extrabold text-slate-900 mb-4 tracking-tight">
+          Estamos validando su perfil
+        </h1>
+
+        <p class="text-slate-600 text-lg mb-8 leading-relaxed font-medium">
+          ¡Gracias por registrarse en PrintFlow! Para asegurar la calidad de
+          nuestra red de imprentas (Sello de Verificación), un administrador
+          está revisando los datos de
+          <strong>{{ request.user.tienda.nombre_tienda }}</strong>.
+        </p>
+
+        <div
+          class="bg-slate-50 rounded-2xl p-6 border border-slate-200 mb-8 text-left"
+        >
+          <h3
+            class="text-sm font-bold text-slate-800 uppercase tracking-widest mb-3"
+          >
+            Siguientes Pasos:
+          </h3>
+          <ul class="space-y-3 text-sm text-slate-600">
+            <li class="flex items-start gap-3">
+              <svg
+                class="w-5 h-5 text-green-500 shrink-0 mt-0.5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 13l4 4L19 7"
+                ></path>
+              </svg>
+              <span>Registro de usuario (completado)</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg
+                class="w-5 h-5 text-green-500 shrink-0 mt-0.5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 13l4 4L19 7"
+                ></path>
+              </svg>
+              <span>Reserva de Subdominio (completado)</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg
+                class="w-5 h-5 text-amber-500 shrink-0 mt-0.5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 8v4l3 3"
+                ></path>
+              </svg>
+              <span>Verificación por equipo Administrador (En Proceso)</span>
+            </li>
+          </ul>
+        </div>
+
+        <p class="text-sm text-slate-500">
+          Le notificaremos automáticamente a su correo
+          <strong>{{ request.user.email }}</strong> cuando su Dashboard esté
+          completamente operativo.
+        </p>
+
+        <div class="mt-8 pt-6 border-t border-slate-100">
+          <!-- Botón Secundario (Cerrar Sesión) -->
+          <form action="{% url 'logout' %}" method="post">
+            {% csrf_token %}
+            <button
+              type="submit"
+              class="text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors"
+            >
+              &larr; Cierra tu sesión por ahora
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

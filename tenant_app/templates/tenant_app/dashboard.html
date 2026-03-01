@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="es" class="h-full bg-gray-50">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - {{ tienda.nombre_tienda }}</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Outfit", sans-serif;
+      }
+      /* Hide scrollbar for clean horizontal scrolls if needed */
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+    </style>
+  </head>
+  <body class="h-full flex flex-col">
+    <!-- Navbar Superior -->
+    <nav class="bg-white border-b border-gray-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+          <div class="flex">
+            <div class="flex-shrink-0 flex items-center">
+              <span
+                class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-blue-500 tracking-tight"
+                >PrintFlow</span
+              >
+              <span
+                class="ml-2 text-sm text-gray-500 font-medium px-2 py-1 rounded-md bg-gray-100 uppercase tracking-widest hidden sm:block"
+                >SaaS</span
+              >
+            </div>
+          </div>
+          <div class="flex items-center space-x-4">
+            <span class="text-sm font-medium text-gray-700 hidden sm:block"
+              >Logueado como: <strong>{{ tienda.nombre_tienda }}</strong></span
+            >
+            <a
+              href="{% url 'logout' %}"
+              class="text-sm font-medium text-red-600 hover:text-red-800 transition-colors border border-red-200 hover:border-red-300 bg-red-50 hover:bg-red-100 rounded-md px-3 py-1.5"
+            >
+              Cerrar Sesión
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Workspace -->
+    <main
+      class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8"
+    >
+      {% if messages %} {% for message in messages %}
+      <div
+        class="rounded-md {% if message.tags == 'success' %}bg-green-50 border-green-400 text-green-800{% else %}bg-red-50 border-red-400 text-red-800{% endif %} p-4 border box-border shadow-sm"
+      >
+        <p class="text-sm font-medium">{{ message }}</p>
+      </div>
+      {% endfor %} {% endif %}
+
+      <!-- Panel de KPIs y Enlace Publico -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Métrica 1 -->
+        <div
+          class="bg-white overflow-hidden shadow-sm rounded-2xl border border-gray-100 p-6 flex flex-col justify-center transition-all hover:shadow-md"
+        >
+          <dt class="text-sm font-medium text-gray-500 truncate">
+            Ventas Totales Producidas
+          </dt>
+          <dd class="mt-2 text-4xl font-extrabold text-indigo-600">
+            ${{ ventas_totales|floatformat:0 }}
+          </dd>
+        </div>
+
+        <!-- Link Tienda -->
+        <div
+          class="bg-white overflow-hidden shadow-sm rounded-2xl border border-gray-100 p-6 flex flex-col justify-between transition-all hover:shadow-md"
+        >
+          <div>
+            <dt class="text-sm font-medium text-gray-500 truncate">
+              Catálogo Público
+            </dt>
+            <dd class="mt-2 text-lg font-bold text-gray-900 break-all">
+              {{ request.scheme }}://{{ tienda.subdominio }}.riflero.cl
+            </dd>
+          </div>
+          <div class="mt-4">
+            <a
+              href="{{ request.scheme }}://{{ tienda.subdominio }}.localhost:8000"
+              target="_blank"
+              class="text-sm text-indigo-600 font-medium hover:text-indigo-800 flex items-center"
+            >
+              Visitar Mi Tienda <span class="ml-1">&rarr;</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Boton Mercado Pago -->
+        <div
+          class="bg-gradient-to-br from-blue-500 to-indigo-600 overflow-hidden shadow-sm rounded-2xl p-6 flex flex-col justify-between relative group text-white"
+        >
+          <div class="z-10 relative">
+            <h3 class="text-xl font-bold">Cobros Activos</h3>
+            <p class="text-blue-100 text-sm mt-1">
+              {% if tienda.mp_vendedor_id %}
+              <span class="flex items-center"
+                ><svg
+                  class="w-4 h-4 mr-1 text-green-300"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clip-rule="evenodd"
+                  ></path>
+                </svg>
+                Vinculado a MP</span
+              >
+              {% else %}
+              <span class="flex items-center"
+                ><svg
+                  class="w-4 h-4 mr-1 text-red-300"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clip-rule="evenodd"
+                  ></path>
+                </svg>
+                Falta configurar cobros</span
+              >
+              {% endif %}
+            </p>
+          </div>
+          <div class="mt-4 z-10 relative">
+            <button
+              onclick="
+                document.getElementById('modal-mp').classList.remove('hidden')
+              "
+              class="w-full bg-white/20 hover:bg-white/30 backdrop-blur border border-white/40 text-white text-sm font-semibold py-2 px-4 rounded-xl transition-colors shadow-sm"
+            >
+              {% if tienda.mp_vendedor_id %}Actualizar Cuenta{% else %}Vincular
+              Mercado Pago{% endif %}
+            </button>
+          </div>
+          <!-- Decoracion background -->
+          <svg
+            class="absolute -bottom-4 -right-4 w-32 h-32 text-white opacity-10 group-hover:scale-110 transition-transform duration-500"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-2h-2v-2h2v-2H9V9h2V7h2v2h2v2h-2v2h2v2h-2v2h-2z"
+            />
+          </svg>
+        </div>
+      </div>
+
+      <!-- Layout Grillas Inferiores -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Lista de Órdenes (Trabajos a Realizar) -->
+        <div
+          class="bg-white shadow-sm rounded-2xl border border-gray-100 flex flex-col h-[500px]"
+        >
+          <div class="px-6 py-5 border-b border-gray-100">
+            <h3 class="text-lg leading-6 font-semibold text-gray-900">
+              Trabajos e Ingresos
+            </h3>
+            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+              Últimas órdenes pagadas y en curso de tus clientes.
+            </p>
+          </div>
+          <div class="flex-1 overflow-y-auto no-scrollbar px-6 py-4">
+            {% if ordenes %}
+            <ul role="list" class="divide-y divide-gray-100">
+              {% for orden in ordenes %}
+              <li
+                class="py-4 hover:bg-gray-50/50 transition-colors rounded-lg px-2 -mx-2"
+              >
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center min-w-0">
+                    <div
+                      class="flex-shrink-0 h-10 w-10 bg-indigo-50 rounded-full flex items-center justify-center border border-indigo-100"
+                    >
+                      <svg
+                        class="h-5 w-5 text-indigo-600"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                        />
+                      </svg>
+                    </div>
+                    <div class="ml-4 min-w-0 flex-1">
+                      <!-- prettier-ignore -->
+                      <p class="text-sm font-semibold text-gray-900 truncate flex items-center">
+                        Ord #{{ orden.id }} {% if orden.estado_pago == 'completado' %}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 ml-2">Pagado</span>
+                        {% else %}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 ml-2">{{ orden.get_estado_pago_display }}</span>
+                        {% endif %}
+                      </p>
+                      <!-- prettier-ignore -->
+                      <p class="text-sm text-gray-500 truncate">
+                        {{ orden.nombre_cliente }} • {{ orden.producto.metadatos.nombre|default:"Producto" }}
+                      </p>
+                    </div>
+                  </div>
+                  <div class="ml-4 flex-shrink-0">
+                    <span class="text-base font-bold text-gray-900"
+                      >+${{ orden.monto_total|floatformat:0 }}</span
+                    >
+                  </div>
+                </div>
+              </li>
+              {% endfor %}
+            </ul>
+            {% else %}
+            <div
+              class="h-full flex flex-col items-center justify-center text-gray-500"
+            >
+              <svg
+                class="w-12 h-12 mb-3 text-gray-300"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+                ></path>
+              </svg>
+              <span class="text-sm font-medium">Aún no hay órdenes</span>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Precios y Márgenes de Ganancia -->
+        <div
+          class="bg-white shadow-sm rounded-2xl border border-gray-100 flex flex-col h-[500px]"
+        >
+          <div
+            class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 rounded-t-2xl"
+          >
+            <div>
+              <h3 class="text-lg leading-6 font-semibold text-gray-900">
+                Define tu Ganancia
+              </h3>
+              <p class="mt-1 max-w-2xl text-xs text-gray-500 font-mono">
+                Actualización dinámica x Web Scraping activo
+              </p>
+            </div>
+            <span
+              class="px-3 py-1 bg-white border border-gray-200 text-indigo-600 font-bold rounded-lg text-sm shadow-sm"
+              >ROI</span
+            >
+          </div>
+          <div class="flex-1 overflow-y-auto no-scrollbar px-6 py-4">
+            {% if productos %}
+            <div class="space-y-4">
+              {% for producto in productos %}
+              <div
+                class="bg-white border text-left rounded-xl p-4 shadow-sm hover:border-indigo-200 hover:ring-1 hover:ring-indigo-100 transition-all group"
+              >
+                <div class="flex justify-between items-start mb-2">
+                  <h4
+                    class="text-sm font-bold text-gray-900 group-hover:text-indigo-600 transition-colors"
+                  >
+                    {{ producto.metadatos.nombre|default:"Producto Genérico" }}
+                  </h4>
+                  <div class="text-right">
+                    <span class="block text-xs text-gray-400"
+                      >Precio Público (Auto)</span
+                    >
+                    <span class="text-lg font-extrabold text-green-600"
+                      >${{ producto.precio_final|floatformat:0 }}</span
+                    >
+                  </div>
+                </div>
+
+                <!-- prettier-ignore -->
+                <div class="flex items-center justify-between text-xs text-gray-500 mb-4 bg-gray-50 px-2 py-1.5 rounded-md">
+                  <span>Costo Base: <strong class="text-gray-700">${{ producto.precio_base|floatformat:0 }}</strong></span>
+                  <span class="text-gray-300">|</span>
+                  <span>Bot activo: {% if tienda.scraping_activado %}<span class="text-green-500 font-medium">ON</span>{% else %}<span class="text-red-400">OFF</span>{% endif %}</span>
+                </div>
+
+                <form
+                  method="POST"
+                  action="{% url 'actualizar_margen' producto.id %}"
+                  class="flex items-center space-x-3"
+                >
+                  {% csrf_token %}
+                  <div class="flex-1 relative">
+                    <label for="margen_{{ producto.id }}" class="sr-only"
+                      >Margen %</label
+                    >
+                    <div
+                      class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                    >
+                      <span class="text-gray-500 sm:text-sm">%</span>
+                    </div>
+                    <input
+                      type="number"
+                      step="0.01"
+                      name="margen_ganancia"
+                      id="margen_{{ producto.id }}"
+                      value="{{ producto.margen_ganancia }}"
+                      class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-8 pr-12 sm:text-sm border-gray-300 rounded-lg py-2 bg-gray-50 text-gray-900"
+                      placeholder="0.00"
+                    />
+                    <div
+                      class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none"
+                    >
+                      <span class="text-gray-400 sm:text-xs">Extra</span>
+                    </div>
+                  </div>
+                  <button
+                    type="submit"
+                    class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500 transition-colors"
+                  >
+                    Guardar
+                  </button>
+                </form>
+              </div>
+              {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-sm text-gray-500 text-center py-10">
+              No hay productos en catálogo.
+            </p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Modal Vincular Mercado Pago -->
+    <div
+      id="modal-mp"
+      class="fixed inset-0 z-50 hidden"
+      aria-labelledby="modal-title"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div
+        class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0"
+      >
+        <div
+          class="fixed inset-0 bg-gray-500 bg-opacity-[0.85] backdrop-blur-sm transition-opacity"
+          aria-hidden="true"
+          onclick="document.getElementById('modal-mp').classList.add('hidden')"
+        ></div>
+        <span
+          class="hidden sm:inline-block sm:align-middle sm:h-screen"
+          aria-hidden="true"
+          >&#8203;</span
+        >
+
+        <div
+          class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full border border-gray-100"
+        >
+          <form action="{% url 'vincular_mp' %}" method="POST">
+            {% csrf_token %}
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+              <div class="sm:flex sm:items-start">
+                <div
+                  class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10"
+                >
+                  <svg
+                    class="h-6 w-6 text-blue-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M13 10V3L4 14h7v7l9-11h-7z"
+                    />
+                  </svg>
+                </div>
+                <div
+                  class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full"
+                >
+                  <h3
+                    class="text-lg leading-6 font-bold text-gray-900"
+                    id="modal-title"
+                  >
+                    Vincular Mercado Pago
+                  </h3>
+                  <div class="mt-2 text-sm text-gray-500">
+                    <p class="mb-4">
+                      Ingresa tus credenciales para recibir pagos directos desde
+                      el carrito de {{ tienda.nombre_tienda }}. Nosotros nos
+                      encargamos del Split tarifario de manera invisible.
+                    </p>
+
+                    <div class="space-y-4 text-left">
+                      <div>
+                        <label
+                          class="block text-sm font-medium text-gray-700 mb-1"
+                          >ID de Vendedor (Seller ID)</label
+                        >
+                        <input
+                          type="text"
+                          name="mp_vendedor_id"
+                          value="{{ tienda.mp_vendedor_id|default:'' }}"
+                          class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-lg p-2.5 bg-gray-50"
+                          placeholder="Ej: 123456789"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          class="block text-sm font-medium text-gray-700 mb-1"
+                          >Access Token de Producción</label
+                        >
+                        <input
+                          type="text"
+                          name="mp_access_token"
+                          value="{{ tienda.mp_access_token|default:'' }}"
+                          class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-lg p-2.5 bg-gray-50"
+                          placeholder="APP_USR-XXXXXX-XXXX-XXXX..."
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div
+              class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-gray-100"
+            >
+              <button
+                type="submit"
+                class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"
+              >
+                Guardar Credenciales
+              </button>
+              <button
+                type="button"
+                onclick="
+                  document.getElementById('modal-mp').classList.add('hidden')
+                "
+                class="mt-3 w-full inline-flex justify-center rounded-xl border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+              >
+                Cancelar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
