@@ -222,6 +222,23 @@ class ProductoTienda(models.Model):
         help_text=_('Tienda a la que pertenece este producto.'),
     )
     
+    nombre = models.CharField(
+        _('nombre del producto'),
+        max_length=150,
+        default='Producto Nuevo',
+        help_text=_('Nombre de venta del producto (ej: Tarjetas de presentación 300g).'),
+    )
+
+    termino_busqueda = models.CharField(
+        _('término de búsqueda para scraping'),
+        max_length=200,
+        blank=True,
+        null=True,
+        help_text=_('Palabras clave que el bot usará para buscar este producto en la competencia. '
+                    'Si está vacío, se usa el nombre del producto. '
+                    'Ej: "pendón roller 80x200 cm doble cara"'),
+    )
+
     precio_base = models.DecimalField(
         _('precio base'),
         max_digits=10,
@@ -252,6 +269,12 @@ class ProductoTienda(models.Model):
         help_text=_('Atributos dinámicos del producto (colores, tamaños, características extra).'),
     )
 
+    orden_visual = models.IntegerField(
+        _('orden en catálogo'),
+        default=0,
+        help_text=_('Define la posición manual del producto en la tienda (Drag & Drop).')
+    )
+
     # Auditoría automática
     creado_en = models.DateTimeField(_('creado en'), auto_now_add=True)
     actualizado_en = models.DateTimeField(_('actualizado en'), auto_now=True)
@@ -259,13 +282,13 @@ class ProductoTienda(models.Model):
     class Meta:
         verbose_name = _('producto de tienda')
         verbose_name_plural = _('productos de tienda')
-        ordering = ['-creado_en']
+        ordering = ['orden_visual', '-creado_en']
         indexes = [
             models.Index(fields=['tienda']),
         ]
 
     def __str__(self) -> str:
-        return f'Producto de {self.tienda.nombre_tienda} (Precio: {self.precio_base})'
+        return f'{self.nombre} - {self.tienda.nombre_tienda} (${self.precio_final})'
 
     @property
     def precio_final(self):
@@ -319,6 +342,95 @@ class RadarPrecio(models.Model):
         return f'{self.competidor_nombre} - {self.precio_extraido}'
 
 
+class ProveedorCompetencia(models.Model):
+    """
+    Tabla maestra de las imprentas o competidores.
+    Evita que cada producto deba escribir el "nombre" y mantiene los contactos.
+    """
+    nombre = models.CharField(
+        _('nombre del competidor'),
+        max_length=150,
+        unique=True,
+        help_text=_('Nombre genérico de la empresa (Ej: Imprenta Okey).')
+    )
+    sitio_web = models.URLField(
+        _('sitio web principal'),
+        blank=True,
+        null=True,
+        help_text=_('URL general de la imprenta. El bot navegará desde aquí.')
+    )
+    url_patron_busqueda = models.CharField(
+        _('patrón de URL del buscador'),
+        max_length=300,
+        blank=True,
+        null=True,
+        help_text=_('Patrón personalizado con {q} como marcador para el término. '
+                    'Ej: "?s={q}" o "/search?query={q}". '
+                    'Si está vacío, el bot intentará patrones comúnes automáticamente.')
+    )
+    whatsapp_detectado = models.CharField(
+        _('WhatsApp detectado'),
+        max_length=50,
+        blank=True,
+        null=True,
+        help_text=_('Número extraído automáticamente.')
+    )
+    email_detectado = models.EmailField(
+        _('Email detectado'),
+        blank=True,
+        null=True,
+        help_text=_('Correo electrónico extraído automáticamente.')
+    )
+    creado_en = models.DateTimeField(_('creado en'), auto_now_add=True)
+
+    class Meta:
+        verbose_name = _('proveedor competencia')
+        verbose_name_plural = _('proveedores competencia')
+        ordering = ['nombre']
+
+    def __str__(self):
+        return self.nombre
+
+class CompetidorScraping(models.Model):
+    """
+    Vincula un producto propio con un proveedor competidor para el radar de precios.
+    El bot visitará el `sitio_web` del proveedor para buscar el precio de este producto.
+    """
+    producto = models.ForeignKey(
+        ProductoTienda,
+        on_delete=models.CASCADE,
+        related_name='competidores_scraping',
+        verbose_name=_('producto objetivo'),
+        help_text=_('Producto propio al que se le buscarán precios competidores.')
+    )
+    
+    proveedor = models.ForeignKey(
+        ProveedorCompetencia,
+        on_delete=models.CASCADE,
+        related_name='scrapings',
+        verbose_name=_('Proveedor competidor'),
+    )
+    
+    activo = models.BooleanField(
+        _('activo'),
+        default=True,
+        help_text=_('Indica si el bot debe visitar la URL de este proveedor o si está pausado.')
+    )
+    
+    creado_en = models.DateTimeField(_('creado en'), auto_now_add=True)
+    actualizado_en = models.DateTimeField(_('actualizado en'), auto_now=True)
+
+    class Meta:
+        verbose_name = _('competidor para scraping')
+        verbose_name_plural = _('competidores para scraping')
+        ordering = ['producto', 'proveedor__nombre']
+        unique_together = ('producto', 'proveedor')
+
+    def __str__(self):
+        proveedor_nombre = self.proveedor.nombre if self.proveedor else '(sin proveedor)'
+        return f"{proveedor_nombre} ↔ {self.producto}"
+
+
 # ===========================================================================
 # SIGNALS (Lógica de Pricing Dinámico)
 # ===========================================================================
@@ -330,7 +442,7 @@ def actualizar_precio_dinamico(sender, instance, created, **kwargs):
     """
     Pricing Dinámico: 
     Cada vez que entra un nuevo registro de RadarPrecio (scraping),
-    tomamos el precio extraído como base, se ignora/recalcula,
+    tomamos el precio más bajo registrado en RadarPrecio para ese producto,
     y actualizamos el precio_base del ProductoTienda vinculado.
 
     El precio final de venta al público (propiedad `precio_final`) 
@@ -338,10 +450,26 @@ def actualizar_precio_dinamico(sender, instance, created, **kwargs):
     """
     if created:
         producto = instance.producto
-        # El precio_base del producto pasa a ser el precio extraído del competidor.
-        producto.precio_base = instance.precio_extraido
-        # save(update_fields) es más rápido y evita triggers secundarios innecesarios
-        producto.save(update_fields=['precio_base', 'actualizado_en'])
+        
+        # Tomamos el precio más bajo registrado en RadarPrecio
+        from django.db.models import Min
+        precio_mas_bajo = RadarPrecio.objects.filter(producto=producto).aggregate(
+            min_precio=Min('precio_extraido')
+        )['min_precio']
+        
+        if precio_mas_bajo is not None:
+            producto.precio_base = precio_mas_bajo
+            # save(update_fields) es más rápido y evita triggers secundarios innecesarios
+            producto.save(update_fields=['precio_base', 'actualizado_en'])
+
+            # (Opcional) Propagar a todas las demás tiendas con scraping activado que tengan este producto base
+            if producto.producto_global:
+                ProductoTienda.objects.filter(
+                    producto_global=producto.producto_global,
+                    tienda__scraping_activado=True
+                ).exclude(id=producto.id).update(
+                    precio_base=precio_mas_bajo
+                )
 
 
 # ===========================================================================
@@ -434,5 +562,30 @@ class PrintScore(models.Model):
 
     def __str__(self):
         return f"Score de {self.tienda.nombre_tienda}: {self.calcular_puntaje_base():.1f}"
+
+
+class HistorialScraping(models.Model):
+    """
+    Registro visual para que el administrador pueda ver en el panel de Django
+    cuándo terminó un scraping y qué resultados obtuvo.
+    """
+    ESTADOS_SCRAPING = [
+        ('EXITO', 'Éxito'),
+        ('ADVERTENCIA', 'Éxito parcial / Advertencias'),
+        ('ERROR', 'Error'),
+    ]
+
+    fecha = models.DateTimeField(_('fecha de ejecución'), auto_now_add=True)
+    producto_scrapeado = models.CharField(_('producto scrapeado'), max_length=255)
+    estado = models.CharField(_('estado final'), max_length=50, choices=ESTADOS_SCRAPING, default='EXITO')
+    detalles = models.TextField(_('detalles de la ejecución'), blank=True)
+
+    class Meta:
+        verbose_name = _('historial de scraping')
+        verbose_name_plural = _('historial de scrapings')
+        ordering = ['-fecha']
+
+    def __str__(self):
+        return f"{self.fecha.strftime('%d/%m/%Y %H:%M')} - {self.producto_scrapeado} ({self.get_estado_display()})"
 
 

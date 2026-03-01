@@ -1,0 +1,80 @@
+{% extends 'tenant_app/layout_panel.html' %} 
+{% block header_title %}Editar Producto{% endblock %} 
+
+{% block header_actions %}
+<a
+  href="{% url 'dashboard_productos' %}"
+  class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+>
+  <svg class="-ml-1 mr-2 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+  </svg>
+  Volver al Catálogo
+</a>
+{% endblock %} 
+
+{% block content %}
+<div class="bg-white shadow-sm rounded-2xl border border-gray-100 mb-8 overflow-hidden max-w-2xl mx-auto">
+  <div class="px-6 py-5 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+    <h3 class="text-lg leading-6 font-semibold text-gray-900">
+      Detalles del Producto
+    </h3>
+  </div>
+
+  <div class="p-6">
+    <form method="POST" action="{% url 'editar_producto' producto.id %}" class="space-y-6">
+      {% csrf_token %}
+      
+      <div>
+        <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre Público (Título en tu tienda)</label>
+        <div class="mt-1">
+          <input type="text" name="nombre" id="nombre" value="{{ producto.nombre }}" required
+            class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border bg-white"
+            placeholder="Ej: Tarjetas de presentación especiales">
+        </div>
+        <p class="mt-2 text-sm text-gray-500">Este es el título que verán tus clientes en tu catálogo online público.</p>
+      </div>
+
+      <div>
+        <label for="precio_base" class="block text-sm font-medium text-gray-700">Precio Base (Costo)</label>
+        <div class="mt-1 relative rounded-md shadow-sm">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <span class="text-gray-500 sm:text-sm">$</span>
+          </div>
+          <input type="number" step="0.01" name="precio_base" id="precio_base" value="{{ producto.precio_base|stringformat:".2f" }}" required
+            class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md p-2 border bg-white"
+            placeholder="0.00">
+        </div>
+        <p class="mt-2 text-sm text-gray-500">
+           El costo de fábrica o precio de referencia base. A este monto se le suma tu <span class="font-bold text-gray-700">Margen de Ganancia ({{ producto.margen_ganancia }}%)</span> para obtener el Precio Público Final.
+        </p>
+      </div>
+      
+      {% if producto.producto_global %}
+      <div class="bg-blue-50 border border-blue-100 rounded-lg p-4 flex gap-3">
+          <div class="flex-shrink-0">
+             <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+             </svg>
+          </div>
+          <div>
+              <h4 class="text-sm font-medium text-blue-800">Producto Conectado al Master</h4>
+              <p class="mt-1 text-sm text-blue-700">
+                  Este producto fue importado desde el catálogo global. Su metadatos de categoría original se mantienen vinculados para que el radar de precios pueda auditarlo respecto a tus competidores.
+              </p>
+          </div>
+      </div>
+      {% endif %}
+
+      <div class="pt-4 flex justify-end gap-3 border-t border-gray-100">
+        <a href="{% url 'dashboard_productos' %}" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+          Cancelar
+        </a>
+        <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+          Actualizar Producto
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

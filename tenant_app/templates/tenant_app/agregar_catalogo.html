@@ -1,0 +1,308 @@
+<!-- prettier-ignore -->
+{% extends 'tenant_app/layout_panel.html' %}
+{% block header_title %}Agregar Producto{% endblock %}
+{% block header_actions %}
+<button
+  type="button"
+  onclick="
+    document.getElementById('modal-personalizado').classList.remove('hidden')
+  "
+  class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+>
+  <svg
+    class="-ml-1 mr-2 h-5 w-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+    ></path>
+  </svg>
+  Crear Producto Personalizado
+</button>
+{% endblock %} {% block content %}
+
+<!-- ================================================================
+     MODAL: Crear Producto Personalizado
+================================================================ -->
+<div
+  id="modal-personalizado"
+  class="hidden fixed inset-0 z-50 overflow-y-auto"
+  aria-labelledby="modal-title"
+  role="dialog"
+  aria-modal="true"
+>
+  <!-- Overlay -->
+  <div
+    class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:items-center sm:p-0"
+  >
+    <div
+      class="fixed inset-0 bg-gray-900 bg-opacity-60 backdrop-blur-sm transition-opacity"
+      onclick="
+        document.getElementById('modal-personalizado').classList.add('hidden')
+      "
+    ></div>
+
+    <!-- Panel -->
+    <div
+      class="relative bg-white rounded-2xl shadow-xl text-left overflow-hidden transform transition-all sm:my-8 w-full sm:max-w-lg"
+    >
+      <!-- Header -->
+      <div
+        class="bg-gradient-to-r from-indigo-600 to-violet-600 px-6 py-5 flex justify-between items-center"
+      >
+        <div>
+          <h3 class="text-lg font-bold text-white" id="modal-title">
+            Producto Personalizado
+          </h3>
+          <p class="text-indigo-200 text-sm mt-0.5">
+            Créalo con tus propios datos. No vinculado al catálogo base.
+          </p>
+        </div>
+        <button
+          type="button"
+          onclick="
+            document
+              .getElementById('modal-personalizado')
+              .classList.add('hidden')
+          "
+          class="text-indigo-200 hover:text-white transition-colors rounded-lg p-1 hover:bg-white/10"
+        >
+          <svg
+            class="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Form -->
+      <form
+        method="POST"
+        action="{% url 'crear_producto_personalizado' %}"
+        class="px-6 py-6 space-y-5"
+      >
+        {% csrf_token %}
+
+        <!-- Nombre -->
+        <div>
+          <label
+            for="custom-nombre"
+            class="block text-sm font-semibold text-gray-700 mb-1"
+          >
+            Nombre del Producto <span class="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            id="custom-nombre"
+            name="nombre"
+            required
+            class="block w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
+            placeholder="Ej: Pendón Roller 80x200 cm doble cara"
+          />
+        </div>
+
+        <!-- Costo de referencia y Margen -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label
+              for="custom-precio"
+              class="block text-sm font-semibold text-gray-700 mb-1"
+            >
+              Costo de Referencia
+            </label>
+            <div class="relative">
+              <span
+                class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 font-medium text-sm"
+                >$</span
+              >
+              <input
+                type="number"
+                id="custom-precio"
+                name="precio_base"
+                min="0"
+                step="0.01"
+                class="block w-full border border-gray-300 rounded-xl pl-7 pr-4 py-2.5 text-sm focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
+                placeholder="0"
+              />
+            </div>
+            <p class="text-xs text-gray-400 mt-1">
+              Precio de tu proveedor (costo).
+            </p>
+          </div>
+          <div>
+            <label
+              for="custom-margen"
+              class="block text-sm font-semibold text-gray-700 mb-1"
+            >
+              Margen de Ganancia %
+            </label>
+            <div class="relative">
+              <span
+                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 text-sm"
+                >%</span
+              >
+              <input
+                type="number"
+                id="custom-margen"
+                name="margen_ganancia"
+                min="0"
+                max="300"
+                step="0.01"
+                value="10"
+                class="block w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
+              />
+            </div>
+            <p class="text-xs text-gray-400 mt-1">
+              Para calcular tu precio de venta.
+            </p>
+          </div>
+        </div>
+
+        <!-- Término de búsqueda -->
+        <div>
+          <label
+            for="custom-termino"
+            class="block text-sm font-semibold text-gray-700 mb-1"
+          >
+            Palabras clave para el Radar de Precios
+            <span class="text-gray-400 font-normal">(opcional)</span>
+          </label>
+          <input
+            type="text"
+            id="custom-termino"
+            name="termino_busqueda"
+            class="block w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
+            placeholder="Ej: pendón roller 80x200 doble cara"
+          />
+          <p class="text-xs text-gray-400 mt-1">
+            El bot las usará para buscar precios en la competencia. Si está
+            vacío, usa el nombre.
+          </p>
+        </div>
+
+        <!-- Footer botones -->
+        <div class="flex justify-end gap-3 pt-2 border-t border-gray-100">
+          <button
+            type="button"
+            onclick="
+              document
+                .getElementById('modal-personalizado')
+                .classList.add('hidden')
+            "
+            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            class="px-5 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors shadow-sm"
+          >
+            Crear Producto
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     CATÁLOGO BASE
+================================================================ -->
+<div
+  class="bg-white shadow-sm rounded-2xl border border-gray-100 flex flex-col"
+>
+  <div
+    class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 rounded-t-2xl"
+  >
+    <div>
+      <h3 class="text-lg leading-6 font-semibold text-gray-900">
+        Catálogo base
+      </h3>
+      <p class="mt-1 max-w-2xl text-sm text-gray-500">
+        Selecciona un producto del catálogo principal. Ya incluyen costo de
+        referencia del mercado.
+      </p>
+    </div>
+  </div>
+
+  <div class="px-6 py-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      {% for global_prod in productos_globales %}
+      <div
+        class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden hover:border-indigo-400 hover:ring-1 hover:ring-indigo-300 transition-all flex flex-col justify-between"
+      >
+        <div class="p-5">
+          <span
+            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 mb-3"
+          >
+            {{ global_prod.categoria }}
+          </span>
+          <h4 class="text-lg font-bold text-gray-900 mb-1">
+            {{ global_prod.nombre }}
+          </h4>
+          <p class="text-sm text-gray-500 mb-4">
+            Costo Ref: ${{ global_prod.precio_costo|floatformat:0 }}
+          </p>
+        </div>
+        <div
+          class="bg-gray-50 px-5 py-3 border-t border-gray-100 text-center mt-auto"
+        >
+          <form
+            action="{% url 'agregar_producto_catalogo_post' global_prod.id %}"
+            method="POST"
+          >
+            {% csrf_token %}
+            <button
+              type="submit"
+              class="w-full text-white bg-indigo-600 hover:bg-indigo-700 font-medium rounded-lg text-sm px-4 py-2 text-center transition-colors"
+            >
+              Agregar a Mi Tienda
+            </button>
+          </form>
+        </div>
+      </div>
+      {% empty %}
+      <div class="col-span-1 sm:col-span-2 md:col-span-3 text-center py-12">
+        <svg
+          class="mx-auto h-12 w-12 text-gray-300"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+          ></path>
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">
+          No hay productos disponibles
+        </h3>
+        <p class="mt-1 text-sm text-gray-500">
+          Ya agregaste todo el catálogo base, o aún no hay productos
+          configurados.
+        </p>
+        <p class="mt-4 text-sm text-indigo-600 font-medium">
+          💡 Usa el botón "Crear Producto Personalizado" de arriba para agregar
+          el tuyo propio.
+        </p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

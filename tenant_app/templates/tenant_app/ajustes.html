@@ -1,0 +1,141 @@
+{% extends 'tenant_app/layout_panel.html' %} {% block header_title %}Ajustes de
+Tienda{% endblock %} {% block content %}
+<div
+  class="bg-white shadow-sm rounded-2xl border border-gray-100 flex flex-col mb-8 max-w-3xl"
+>
+  <div class="px-6 py-5 border-b border-gray-100 bg-gray-50/50 rounded-t-2xl">
+    <h3 class="text-lg leading-6 font-semibold text-gray-900">
+      Pasarela de Pagos
+    </h3>
+    <p class="mt-1 max-w-2xl text-sm text-gray-500">
+      Configura tu cuenta de Mercado Pago para recibir el dinero de tus ventas
+      directamente, descontando automáticamente la comisión base de PrintFlow.
+    </p>
+  </div>
+
+  <div class="px-6 py-6">
+    <form action="{% url 'vincular_mp' %}" method="POST" class="space-y-6">
+      {% csrf_token %}
+      <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+        <div class="sm:col-span-4">
+          <label
+            for="mp_vendedor_id"
+            class="block text-sm font-medium text-gray-700 mb-1"
+            >ID de Vendedor (Seller ID)</label
+          >
+          <div class="mt-1 relative rounded-md shadow-sm">
+            <div
+              class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+            >
+              <svg
+                class="h-5 w-5 text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
+              </svg>
+            </div>
+            <input
+              type="text"
+              name="mp_vendedor_id"
+              id="mp_vendedor_id"
+              value="{{ tienda.mp_vendedor_id|default:'' }}"
+              class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-lg p-2.5 bg-gray-50 text-gray-900"
+              placeholder="Ej: 123456789"
+            />
+          </div>
+        </div>
+
+        <div class="sm:col-span-6">
+          <label
+            for="mp_access_token"
+            class="block text-sm font-medium text-gray-700 mb-1"
+            >Access Token (Producción)</label
+          >
+          <div class="mt-1 relative rounded-md shadow-sm">
+            <div
+              class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+            >
+              <svg
+                class="h-5 w-5 text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                />
+              </svg>
+            </div>
+            <input
+              type="password"
+              name="mp_access_token"
+              id="mp_access_token"
+              value="{{ tienda.mp_access_token|default:'' }}"
+              class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-lg p-2.5 bg-gray-50 text-gray-900"
+              placeholder="APP_USR-XXXXXX-XXXX-XXXX..."
+            />
+          </div>
+          <p class="mt-2 text-xs text-gray-500">
+            Puedes obtener estas credenciales creando una aplicación en el
+            portal de desarrolladores de Mercado Pago.
+          </p>
+        </div>
+      </div>
+
+      <div class="pt-5 flex justify-end pb-6 border-b border-gray-100">
+        <button
+          type="submit"
+          class="inline-flex justify-center py-2 px-6 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+        >
+          Guardar Integración
+        </button>
+      </div>
+    </form>
+
+    <div class="mt-8">
+      <h4 class="text-base font-medium text-gray-900 mb-4">
+        Seguridad de la Cuenta
+      </h4>
+      <div
+        class="bg-gray-50 rounded-lg p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between border border-gray-200"
+      >
+        <div class="mb-4 sm:mb-0">
+          <p class="text-sm font-medium text-gray-900">Contraseña de acceso</p>
+          <p class="text-sm text-gray-500 mt-1">
+            Es recomendable cambiar tu contraseña periódicamente por seguridad.
+          </p>
+        </div>
+        <a
+          href="{% url 'password_change' %}"
+          class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors whitespace-nowrap"
+        >
+          <svg
+            class="-ml-1 mr-2 h-4 w-4 text-gray-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+            ></path>
+          </svg>
+          Cambiar Contraseña
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

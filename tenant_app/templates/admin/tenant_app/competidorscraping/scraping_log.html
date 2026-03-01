@@ -1,0 +1,129 @@
+<!-- prettier-ignore -->
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static %}
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+  &rsaquo;
+  <a href="{% url 'admin:app_list' app_label='tenant_app' %}">Tenant App</a>
+  &rsaquo;
+  <a href="{% url 'admin:tenant_app_competidorscraping_changelist' %}"
+    >Competidores para scraping</a
+  >
+  &rsaquo; Ejecución Manual de Scraping
+</div>
+{% endblock %} {% block content %}
+<div id="content-main">
+  <h1>Ejecución de Scraping en Vivo</h1>
+
+  {% if not resultados %}
+  <p>
+    Estás a punto de forzar a que el bot visite las páginas de estos
+    competidores y obtenga los precios más recientes para los productos
+    seleccionados.
+  </p>
+  <p>
+    <strong>ATENCIÓN:</strong> Este proceso se ejecutará de forma sincrónica
+    para que puedas ver el resultado inmediato. Dependiendo de la cantidad de
+    competidores, podría tomar entre 5 a 30 segundos.
+  </p>
+
+  <form method="POST">
+    {% csrf_token %}
+    <div class="submit-row" style="margin-top: 20px; text-align: left">
+      <input
+        type="submit"
+        value="Iniciar Búsqueda en Vivo"
+        class="default"
+        style="cursor: pointer; padding: 10px 20px; font-size: 14px"
+      />
+      <a
+        href="{% url 'admin:tenant_app_competidorscraping_changelist' %}"
+        class="button cancel-link"
+        >Cancelar</a
+      >
+    </div>
+
+    <p
+      id="loading-msg"
+      style="
+        display: none;
+        padding: 15px;
+        margin-top: 20px;
+        background: #e0f2fe;
+        color: #0369a1;
+        border-radius: 4px;
+      "
+    >
+      <span class="loader" style="display: inline-block; margin-right: 10px"
+        >⏳</span
+      >
+      <strong>Buscando precios... Por favor no cierres esta ventana.</strong>
+    </p>
+  </form>
+
+  <script>
+    document.querySelector("form").addEventListener("submit", function () {
+      document.querySelector("input[type=submit]").disabled = true;
+      document.querySelector("input[type=submit]").value = "Rastreando web...";
+      document.getElementById("loading-msg").style.display = "block";
+    });
+  </script>
+
+  {% else %}
+
+  <div class="results" style="margin-top: 20px">
+    <h2>Resultados del Rastreo</h2>
+
+    {% for res in resultados %}
+    <div
+      style="
+        background: white;
+        border: 1px solid #ddd;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+      "
+    >
+      <h3
+        style="
+          margin-top: 0;
+          padding-bottom: 10px;
+          border-bottom: 1px solid #eee;
+          color: #333;
+        "
+      >
+        Producto: {{ res.producto }}
+      </h3>
+      <pre
+        style="
+          background: #f8f9fa;
+          padding: 15px;
+          border-radius: 4px;
+          overflow-x: auto;
+          font-family: monospace;
+        "
+      >
+{{ res.log }}</pre
+      >
+    </div>
+    {% endfor %}
+
+    <div class="submit-row" style="margin-top: 20px; text-align: left">
+      <a
+        href="{% url 'admin:tenant_app_historialscraping_changelist' %}"
+        class="button default"
+        style="margin-right: 10px"
+        >Ver Historial Completo</a
+      >
+      <a
+        href="{% url 'admin:tenant_app_competidorscraping_changelist' %}"
+        class="button"
+        >Volver a los Competidores</a
+      >
+    </div>
+  </div>
+
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,228 @@
+{% extends 'tenant_app/layout_panel.html' %} {% block header_title %}Mi Catálogo
+de Productos{% endblock %} {% block header_actions %}
+<a
+  href="{% url 'agregar_producto_catalogo' %}"
+  class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+>
+  <svg
+    class="-ml-1 mr-2 h-5 w-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+    ></path>
+  </svg>
+  Nuevo Producto
+</a>
+{% endblock %} {% block content %}
+<div
+  class="bg-white shadow-sm rounded-2xl border border-gray-100 flex flex-col mb-8"
+>
+  <div
+    class="px-6 py-5 border-b border-gray-100 bg-gray-50/50 rounded-t-2xl flex justify-between items-center"
+  >
+    <div>
+      <h3 class="text-lg leading-6 font-semibold text-gray-900">
+        Define tu Ganancia y Orden
+      </h3>
+      <p class="mt-1 max-w-2xl text-xs text-gray-500 font-mono">
+        Arrastra los productos para reordenarlos en tu tienda pública (Drag &
+        Drop)
+      </p>
+    </div>
+    <span
+      id="save-status"
+      class="text-sm text-green-600 font-medium opacity-0 transition-opacity duration-300 flex items-center"
+    >
+      <svg
+        class="w-4 h-4 mr-1"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M5 13l4 4L19 7"
+        ></path>
+      </svg>
+      Orden guardado
+    </span>
+  </div>
+
+  <div class="px-6 py-6">
+    {% if productos %}
+    <div id="sortable-products" class="space-y-4">
+      {% for producto in productos %}
+      <div
+        data-id="{{ producto.id }}"
+        class="sortable-card bg-white border border-gray-200 text-left rounded-xl p-4 shadow-sm hover:border-indigo-300 hover:ring-1 hover:ring-indigo-100 transition-all flex flex-col md:flex-row gap-4 items-center group cursor-grab active:cursor-grabbing"
+      >
+        <!-- Drag Handle Icon -->
+        <div
+          class="text-gray-300 hover:text-gray-500 flex-shrink-0 cursor-grab px-2"
+        >
+          <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+            <path
+              d="M8 6a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm0 6a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm0 6a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm6-12a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm0 6a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm0 6a2 2 0 1 1-4 0 2 2 0 0 1 4 0z"
+            />
+          </svg>
+        </div>
+
+        <div class="flex-1 w-full">
+          <div class="flex justify-between items-start mb-2">
+            <h4
+              class="text-base font-bold text-gray-900 group-hover:text-indigo-600 transition-colors"
+            >
+              {{ producto.nombre }}
+            </h4>
+            <div class="text-right">
+              <span class="block text-xs text-gray-400"
+                >Precio Público Base</span
+              >
+              <span class="text-lg font-extrabold text-green-600"
+                >${{ producto.precio_final|floatformat:0 }}</span
+              >
+            </div>
+          </div>
+
+          <!-- prettier-ignore -->
+          <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500 mb-4 bg-gray-50 px-3 py-2 rounded-lg">
+                <span>Costo Fabrica: <strong class="text-gray-700">${{ producto.precio_base|floatformat:0 }}</strong></span>
+                <span class="text-gray-300">|</span>
+                <span>Margen Actual: <strong class="text-indigo-600">{{ producto.margen_ganancia }}%</strong></span>
+                <span class="text-gray-300">|</span>
+                <span>Actualización bot: {% if tienda.scraping_activado %}<span class="text-green-500 font-semibold">ON</span>{% else %}<span class="text-red-400">OFF</span>{% endif %}</span>
+            </div>
+
+          <div class="flex flex-col sm:flex-row gap-3 items-center w-full mt-2 justify-between">
+            <form
+              method="POST"
+              action="{% url 'actualizar_margen' producto.id %}?next={{ request.path }}"
+              class="flex items-center space-x-3 w-full sm:w-72"
+            >
+              {% csrf_token %}
+              <div class="flex-1 relative">
+                <label for="margen_{{ producto.id }}" class="sr-only"
+                  >Cambiar Margen %</label
+                >
+                <div
+                  class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                >
+                  <span class="text-gray-500 sm:text-sm">%</span>
+                </div>
+                <input
+                  type="number"
+                  step="0.01"
+                  name="margen_ganancia"
+                  id="margen_{{ producto.id }}"
+                  value="{{ producto.margen_ganancia|stringformat:".2f" }}"
+                  class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-8 pr-3 sm:text-sm border-gray-300 rounded-lg py-2 bg-white form-input shadow-sm"
+                  placeholder="0.00"
+                />
+              </div>
+              <button
+                type="submit"
+                class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 transition-colors"
+              >
+                Guardar
+              </button>
+            </form>
+            
+            <div class="flex gap-2 w-full sm:w-auto mt-3 sm:mt-0 justify-end">
+                <a href="{% url 'editar_producto' producto.id %}" class="inline-flex items-center px-3 py-2 border border-blue-200 shadow-sm text-sm font-medium rounded-lg text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors">
+                    <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                    Editar
+                </a>
+                
+                <form method="POST" action="{% url 'eliminar_producto' producto.id %}" onsubmit="return confirm('¿Estás seguro de que quieres eliminar este producto de tu catálogo?');">
+                    {% csrf_token %}
+                    <button type="submit" class="inline-flex items-center px-3 py-2 border border-red-200 shadow-sm text-sm font-medium rounded-lg text-red-700 bg-red-50 hover:bg-red-100 transition-colors">
+                        <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Eliminar
+                    </button>
+                </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-12">
+      <svg
+        class="mx-auto h-12 w-12 text-gray-300"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+        ></path>
+      </svg>
+      <h3 class="mt-2 text-sm font-medium text-gray-900">
+        Aún no tienes productos en exhibición
+      </h3>
+      <p class="mt-1 text-sm text-gray-500">
+        Agrega productos maestros desde el menú superior para empezar a vender.
+      </p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %} {% block extra_scripts %}
+<!-- Sortable.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    var el = document.getElementById("sortable-products");
+    if (el) {
+      var sortable = Sortable.create(el, {
+        animation: 150,
+        ghostClass: "bg-indigo-50",
+        handle: ".sortable-card", // the whole card acts as handle or restrict to icon
+        onEnd: function (evt) {
+          // Get all items in current order
+          var items = el.querySelectorAll(".sortable-card");
+          var idOrder = Array.from(items).map((item) =>
+            item.getAttribute("data-id"),
+          );
+
+          // Send new order to server via fetch
+          fetch('{% url "api_reordenar_productos" %}', {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": "{{ csrf_token }}",
+            },
+            body: JSON.stringify({ orden: idOrder }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.status === "ok") {
+                // Flash success message
+                const status = document.getElementById("save-status");
+                status.classList.remove("opacity-0");
+                setTimeout(() => status.classList.add("opacity-0"), 2000);
+              }
+            })
+            .catch((error) => console.error("Error:", error));
+        },
+      });
+    }
+  });
+</script>
+{% endblock %}

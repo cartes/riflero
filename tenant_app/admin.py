@@ -1,12 +1,27 @@
 from django.contrib import admin
 
-from .models import Tienda, ProductoTienda, RadarPrecio, Orden, ProductoGlobal
+from .models import Tienda, ProductoTienda, RadarPrecio, Orden, ProductoGlobal, CompetidorScraping, HistorialScraping, ProveedorCompetencia
 
 
 
 from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib import messages
+from .tasks import scraping_precios_graficos
+
+@admin.action(description="Ejecutar Scraping (Buscar precios ahora)")
+def ejecutar_scraping_manual(modeladmin, request, queryset):
+    contador = 0
+    for producto in queryset:
+        if producto.tienda.scraping_activado:
+            # Enviar la tarea a Celery de forma asíncrona
+            scraping_precios_graficos.delay(producto.id)
+            contador += 1
+            
+    if contador > 0:
+        messages.success(request, f'Se ha enviado la orden de scraping para {contador} productos. Los resultados aparecerán en Radar de Precios en unos minutos.')
+    else:
+        messages.warning(request, 'No se ejecutó scraping. Asegúrate de que las tiendas de los productos seleccionados tengan el "Scraping activado".')
 
 @admin.action(description="Aprobar Tiendas Seleccionadas")
 def aprobar_tiendas(modeladmin, request, queryset):
@@ -107,17 +122,134 @@ class ProductoTiendaAdmin(admin.ModelAdmin):
         'creado_en',
     )
     list_filter = ('tienda', 'creado_en')
-    search_fields = ('tienda__nombre_tienda',)
+    search_fields = ('nombre', 'tienda__nombre_tienda',)
     readonly_fields = ('creado_en', 'actualizado_en')
     ordering = ('-creado_en',)
+    actions = [ejecutar_scraping_manual]
 
     fieldsets = (
         (None, {
-            'fields': ('tienda', 'precio_base', 'margen_ganancia', 'metadatos'),
+            'fields': ('tienda', 'nombre', 'precio_base', 'margen_ganancia', 'metadatos'),
         }),
         ('Auditoría', {
             'classes': ('collapse',),
             'fields': ('creado_en', 'actualizado_en'),
+        }),
+    )
+
+
+@admin.action(description="Ejecutar Scraping (Buscar precios para estos competidores)")
+def ejecutar_scraping_manual_competidor(modeladmin, request, queryset):
+    import json
+    from django.urls import reverse
+    from django.http import HttpResponseRedirect
+    
+    # Agrupar por producto para no ejecutar la tarea múltiples veces para el mismo producto
+    productos_a_scrapear = list()
+    for competidor in queryset:
+        if competidor.activo and competidor.producto.tienda.scraping_activado:
+            if competidor.producto.id not in productos_a_scrapear:
+                productos_a_scrapear.append(competidor.producto.id)
+            
+    if not productos_a_scrapear:
+        messages.warning(request, 'No se ejecutó scraping. Asegúrate de que los competidores estén activos y sus tiendas tengan el "Scraping activado".')
+        return
+
+    # Redirigimos a una vista especial en el admin para correr el scraping y ver los logs
+    # Pasamos los IDs como argumento GET
+    ids_str = ",".join(str(p) for p in productos_a_scrapear)
+    url = reverse('admin:ejecutar_scraping_log') + f"?ids={ids_str}"
+    return HttpResponseRedirect(url)
+
+
+@admin.register(CompetidorScraping)
+class CompetidorScrapingAdmin(admin.ModelAdmin):
+    def get_urls(self):
+        from django.urls import path
+        urls = super().get_urls()
+        custom_urls = [
+            path('ejecutar-scraping-log/', self.admin_site.admin_view(self.ejecutar_scraping_log_view), name='ejecutar_scraping_log'),
+        ]
+        return custom_urls + urls
+
+    def ejecutar_scraping_log_view(self, request):
+        from django.shortcuts import render
+        from tenant_app.models import ProductoTienda
+        from tenant_app.tasks import scraping_precios_graficos
+        
+        ids_str = request.GET.get('ids', '')
+        resultados_generales = []
+        
+        if request.method == 'POST':
+            if ids_str:
+                id_list = [int(i) for i in ids_str.split(',') if i.isdigit()]
+                
+                # Ejecutar sincrónicamente para ver el log inmediato
+                for prod_id in id_list:
+                    try:
+                        producto = ProductoTienda.objects.get(id=prod_id)
+                        # Llamamos directo a la función subyacente de Celery
+                        resultado = scraping_precios_graficos(prod_id)
+                        resultados_generales.append({
+                            'producto': producto.nombre,
+                            'log': resultado
+                        })
+                    except Exception as e:
+                        resultados_generales.append({
+                            'producto': f'ID {prod_id}',
+                            'log': f'Error fatal de ejecución: {str(e)}'
+                        })
+                        
+        context = dict(
+            self.admin_site.each_context(request),
+            title='Ejecución de Scraping en Vivo',
+            ids_str=ids_str,
+            resultados=resultados_generales
+        )
+        return render(request, 'admin/tenant_app/competidorscraping/scraping_log.html', context)
+
+    list_display = (
+        'proveedor',
+        'producto',
+        'activo',
+        'creado_en',
+    )
+    list_filter = ('activo', 'producto__tienda', 'proveedor')
+    search_fields = ('proveedor__nombre', 'producto__nombre')
+    readonly_fields = ('creado_en', 'actualizado_en')
+    ordering = ('producto', 'proveedor')
+    autocomplete_fields = ['proveedor']
+    actions = [ejecutar_scraping_manual_competidor]
+
+    fieldsets = (
+        (None, {
+            'fields': ('producto', 'proveedor', 'activo'),
+            'description': 'Selecciona el producto y el proveedor. El bot usará el sitio web del proveedor para buscar el precio.',
+        }),
+        ('Auditoría', {
+            'classes': ('collapse',),
+            'fields': ('creado_en', 'actualizado_en'),
+        }),
+    )
+
+
+@admin.register(ProveedorCompetencia)
+class ProveedorCompetenciaAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'sitio_web', 'whatsapp_detectado', 'email_detectado', 'creado_en')
+    search_fields = ('nombre', 'sitio_web', 'whatsapp_detectado', 'email_detectado')
+    ordering = ('nombre',)
+    fieldsets = (
+        ('Datos Generales', {
+            'fields': ('nombre', 'sitio_web', 'url_patron_busqueda'),
+            'description': (
+                'El bot buscará el producto en <strong>Sitio Web</strong> usando el <strong>Patrón de búsqueda</strong>. '
+                'Ej: si el buscador es <code>graficavm.cl/?s=pendón</code>, el patrón es <code>?s={q}</code>. '
+                'Si lo dejas vacío, el bot probará los patrones más comunes automáticamente.'
+            ),
+        }),
+        ('Contacto Detectado por el Bot', {
+            'fields': ('whatsapp_detectado', 'email_detectado'),
+            'description': 'Información extraída automáticamente por el radar de precios. Puedes editarla manualmente.',
         }),
     )
 
@@ -172,4 +304,22 @@ class OrdenAdmin(admin.ModelAdmin):
             'fields': ('creado_en', 'actualizado_en'),
         }),
     )
+
+@admin.register(HistorialScraping)
+class HistorialScrapingAdmin(admin.ModelAdmin):
+    list_display = (
+        'fecha',
+        'producto_scrapeado',
+        'estado',
+    )
+    list_filter = ('estado', 'fecha')
+    search_fields = ('producto_scrapeado', 'detalles')
+    readonly_fields = ('fecha', 'producto_scrapeado', 'estado', 'detalles')
+    
+    # Prevenir que se agreguen o modifiquen manualmente desde el panel de admin
+    def has_add_permission(self, request):
+        return False
+        
+    def has_change_permission(self, request, obj=None):
+        return False
 
