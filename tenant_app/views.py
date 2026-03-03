@@ -1,6 +1,23 @@
-from decimal import Decimal
-from django.shortcuts import render
-from tenant_app.models import ProductoTienda
+import json
+import logging
+from decimal import Decimal, InvalidOperation
+
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import views as auth_views
+from django.contrib.auth.decorators import login_required
+from django.contrib.messages.views import SuccessMessageMixin
+from django.core.mail import mail_admins
+from django.db.models import Q
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse_lazy
+from django.views.decorators.http import require_POST
+
+from tenant_app.forms import RegistroTiendaForm
+from tenant_app.models import Orden, ProductoGlobal, ProductoTienda, RadarPrecio, Tienda
+
+logger = logging.getLogger(__name__)
 
 def index(request):
     """
@@ -34,8 +51,6 @@ def render_vista_landing(request):
     Renderiza la Landing Page principal (Riflero / PrintFlow).
     Inyecta las tiendas más destacadas (Verificadas y con mejor PrintScore).
     """
-    from tenant_app.models import Tienda
-    
     todas_tiendas = list(Tienda.objects.select_related('printscore').all())
     
     # Ordenamos en memoria usando la property `puntaje_global` y bajamos las que no tienen local físico
@@ -66,7 +81,6 @@ def buscar_view(request):
     if query:
         # Búsqueda simple: buscaremos "query" dentro de los metadatos o nombre del producto.
         # Filtramos primero la existencia de algo en los metadatos.
-        from django.db.models import Q
         base_qs = ProductoTienda.objects.filter(
             Q(metadatos__icontains=query) | Q(tienda__nombre_tienda__icontains=query)
         ).select_related('tienda', 'tienda__printscore')
@@ -102,13 +116,6 @@ def buscar_view(request):
 # ===========================================================================
 # VISTAS PRIVADAS (SAAS / DASHBOARD SUBCONTRATISTA)
 # ===========================================================================
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect
-from django.contrib import messages
-from django.core.mail import mail_admins
-from tenant_app.models import Orden, ProductoTienda
-from tenant_app.forms import RegistroTiendaForm
 
 def registro_view(request):
     """
@@ -148,7 +155,7 @@ def pendiente_aprobacion_view(request):
     try:
         if request.user.tienda.aprobada:
             return redirect('dashboard')
-    except Exception:
+    except AttributeError:
         # No tiene tienda o es admin
         pass
         
@@ -189,7 +196,7 @@ def dashboard_view(request):
         tienda = request.user.tienda
         if not tienda.aprobada:
             return redirect('pendiente_aprobacion')
-    except Exception:
+    except AttributeError:
         messages.error(request, 'No tienes un Taller vinculado a esta cuenta.')
         return redirect('index')
 
@@ -197,7 +204,6 @@ def dashboard_view(request):
     ventas_totales = sum(o.monto_total for o in ordenes_pagadas)
     
     # Listado de productos para el filtro del radar
-    from tenant_app.models import RadarPrecio, ProductoTienda
     listado_productos = ProductoTienda.objects.filter(tienda=tienda).order_by('nombre')
     
     # Obtener las últimas 5 detecciones de precios competitivos para los productos de esta tienda
@@ -222,7 +228,7 @@ def dashboard_view(request):
 def productos_view(request):
     try:
         tienda = request.user.tienda
-    except Exception:
+    except AttributeError:
         return redirect('index')
         
     productos = ProductoTienda.objects.filter(tienda=tienda)
@@ -230,10 +236,9 @@ def productos_view(request):
 
 @login_required(login_url='login')
 def eliminar_producto(request, producto_id):
-    from django.shortcuts import get_object_or_404
     try:
         tienda = request.user.tienda
-    except Exception:
+    except AttributeError:
         return redirect('index')
         
     producto = get_object_or_404(ProductoTienda, id=producto_id, tienda=tienda)
@@ -244,10 +249,9 @@ def eliminar_producto(request, producto_id):
 
 @login_required(login_url='login')
 def editar_producto(request, producto_id):
-    from django.shortcuts import get_object_or_404
     try:
         tienda = request.user.tienda
-    except Exception:
+    except AttributeError:
         return redirect('index')
         
     producto = get_object_or_404(ProductoTienda, id=producto_id, tienda=tienda)
@@ -272,7 +276,7 @@ def editar_producto(request, producto_id):
 def ventas_view(request):
     try:
         tienda = request.user.tienda
-    except Exception:
+    except AttributeError:
         return redirect('index')
         
     ordenes = Orden.objects.filter(tienda=tienda).order_by('-creado_en')[:50]
@@ -283,14 +287,10 @@ def ventas_view(request):
 def ajustes_view(request):
     try:
         tienda = request.user.tienda
-    except Exception:
+    except AttributeError:
         return redirect('index')
         
     return render(request, 'tenant_app/ajustes.html', {'tienda': tienda})
-
-from django.contrib.auth import views as auth_views
-from django.contrib.messages.views import SuccessMessageMixin
-from django.urls import reverse_lazy
 
 class CustomPasswordChangeView(SuccessMessageMixin, auth_views.PasswordChangeView):
     template_name = 'tenant_app/password_change.html'
@@ -301,14 +301,10 @@ class CustomPasswordChangeView(SuccessMessageMixin, auth_views.PasswordChangeVie
         context = super().get_context_data(**kwargs)
         try:
             context['tienda'] = self.request.user.tienda
-        except Exception:
+        except AttributeError:
             pass
         return context
 
-
-import json
-from django.http import JsonResponse
-from django.views.decorators.http import require_POST
 
 @login_required(login_url='login')
 @require_POST
@@ -365,8 +361,6 @@ def actualizar_margen(request, producto_id):
             
     return redirect('dashboard')
 
-
-from .models import ProductoGlobal
 
 @login_required(login_url='login')
 def agregar_producto_catalogo_view(request):
@@ -443,7 +437,7 @@ def crear_producto_personalizado(request):
     if request.method == 'POST':
         try:
             tienda = request.user.tienda
-        except Exception:
+        except AttributeError:
             return redirect('index')
 
         nombre = request.POST.get('nombre', '').strip()
@@ -459,12 +453,12 @@ def crear_producto_personalizado(request):
         try:
             precio_limpio = precio_base_raw.replace('.', '').replace(',', '').strip()
             precio_base = Decimal(precio_limpio) if precio_limpio else Decimal('0')
-        except Exception:
+        except InvalidOperation:
             precio_base = Decimal('0')
 
         try:
             margen_val = Decimal(margen_raw.replace(',', '.')) if margen_raw else Decimal('10')
-        except Exception:
+        except InvalidOperation:
             margen_val = Decimal('10')
 
         try:

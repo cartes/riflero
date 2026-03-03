@@ -1,4 +1,6 @@
 import json
+import logging
+
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import mercadopago
@@ -7,6 +9,8 @@ from tenant_app.models import Orden
 
 # Decouple configuration
 from decouple import config
+
+logger = logging.getLogger(__name__)
 
 @csrf_exempt
 def mercadopago_webhook(request):
@@ -27,7 +31,7 @@ def mercadopago_webhook(request):
         if topic == "payment" and evento_id:
             try:
                 # 1. Instanciamos SDK con el token maestro
-                access_token = config('MP_ACCESS_TOKEN', default='TEST-9003504959400262-022410-b74ccbb1d50e88383a15dc2d677610fa-1123456789')
+                access_token = config('MP_ACCESS_TOKEN')
                 sdk = mercadopago.SDK(access_token)
 
                 # 2. Consultar a MP por la info real del pago usando evento_id
@@ -63,7 +67,7 @@ def mercadopago_webhook(request):
 
             except Exception as e:
                 # MP suele reintentar si mandamos 500, loguear para investigar
-                print(f"Error procesando Webhook MP: {e}")
+                logger.error("Error procesando Webhook MP: %s", e)
                 return HttpResponse(status=500)
 
         # Si no es topic payment o no encontramos la orden, mandamos 200 igual para que MP deje de spamear retrys.
