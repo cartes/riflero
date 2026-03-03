@@ -2,15 +2,13 @@ import mercadopago
 from django.conf import settings
 from decimal import Decimal
 
-# Variables de entorno ideales (agregamos provisorios para desarrollo local si no existen en config)
-# MP_ACCESS_TOKEN_PRINTFLOW será el generador principal de pagos
 from decouple import config
 
 class MercadoPagoService:
     def __init__(self):
         # El Access Token de Producción/Test de la cuenta Master (PrintFlow)
         # Quien genera la preferencia y corta el 'application_fee'
-        self.access_token = config('MP_ACCESS_TOKEN', default='TEST-9003504959400262-022410-b74ccbb1d50e88383a15dc2d677610fa-1123456789')
+        self.access_token = config('MP_ACCESS_TOKEN')
         self.sdk = mercadopago.SDK(self.access_token)
         
         # Porcentaje del 'Success Fee' automático que se queda PrintFlow (ej. 3%)
