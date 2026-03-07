@@ -34,3 +34,28 @@ media/
 
 # Node
 node_modules/
+
+# Environment & secrets
+.env
+!.env.example
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# AI / Copilot agents
+.agent/
+.agents/
+.claude/
+skills-lock.json
+
+# Playwright
+playwright-report/
+test-results/

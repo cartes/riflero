@@ -9,7 +9,7 @@
     "mercadopago-integration": {
       "source": "martinacostadev/mercadopago-integration",
       "sourceType": "github",
-      "computedHash": "d7e09fc93987764d4988fa5ebcc16d891d6dd65a1a7580256007c77eb12ff311"
+      "computedHash": "faea8440a30aeb78039e504898889b36f25a10eb26331b2d78cbd3ff26e4560d"
     },
     "tailwind-design-system": {
       "source": "wshobson/agents",

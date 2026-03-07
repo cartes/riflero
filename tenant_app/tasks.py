@@ -44,25 +44,68 @@ SEARCH_URL_PATTERNS = [
 ]
 
 
-def _limpiar_precio(texto: str) -> Decimal | None:
-    """Extrae el primer número de precio válido de un texto."""
-    if not texto:
-        return None
-    # Limpia símbolos y espacios
-    limpio = re.sub(r'[^\d\.,]', '', texto.strip())
-    # Normaliza separadores chilenos (punto=miles, coma=decimal)
-    limpio = limpio.replace('.', '').replace(',', '')
-    if limpio.isdigit() and len(limpio) >= 2:
-        return Decimal(limpio)
+def _extraer_cantidad_objetivo(termino: str) -> int | None:
+    """Intenta extraer la cantidad numérica (ej. 1000 unid) del término de búsqueda."""
+    # Primero buscar explícitamente [numero] + [unidades/unid/u/ejemplares/packs]
+    match = re.search(r'(\d+)\s*(?:unid|unidades|ejemplares|packs)\b', termino, re.IGNORECASE)
+    if not match:
+        # Luego intentar variaciones como 'x1000' pero requerir que esté aislado para evitar '11x15'
+        match = re.search(r'\bx\s*(\d{2,})\b', termino, re.IGNORECASE)
+        
+    if match:
+        cantidad = match.group(1)
+        try:
+            return int(cantidad)
+        except ValueError:
+            pass
     return None
 
 
-def _extraer_precio_pagina(page) -> tuple[Decimal | None, str]:
+def _extraer_precio_pagina(page, cantidad_objetivo: int | None = None) -> tuple[Decimal | None, str]:
     """
-    Intenta extraer un precio de una página usando selectores CSS inteligentes.
+    Intenta extraer un precio de una página. Si se proporciona cantidad_objetivo,
+    intenta encontrar el precio asociado a esa cantidad (ej. 1000 unidades = $19990).
     Devuelve (precio, método_usado).
     """
-    # Intento 1: Selectores CSS conocidos por plataforma
+    texto_completo = ""
+    try:
+        texto_completo = page.locator('body').inner_text(timeout=8000)
+    except Exception:
+        pass
+
+    # Intento 0: Si tenemos una cantidad objetivo, buscar precios cerca de esa cantidad
+    if cantidad_objetivo and texto_completo:
+        # Busca "1000[algo] precio" o "1000 unidades... $15990"
+        # Esto busca la cantidad, seguido de 0-60 caracteres, seguido por un símbolo $ y un número
+        patron_cantidad = rf'{cantidad_objetivo}\s*(?:unid|u\b|unidades|ejemplares|packs)[^\d\$]{{0,60}}\$\s*([\d\.]+(?:,\d+)?)'
+        match = re.search(patron_cantidad, texto_completo, re.IGNORECASE)
+        if match:
+            precio = _limpiar_precio(match.group(1))
+            if precio and precio > 100:
+                return precio, f"Regex cantidad ({cantidad_objetivo})"
+
+        # Búsqueda inversa: precio seguido de la cantidad en los próximos 60 caracteres
+        patron_inverso = rf'\$\s*([\d\.]+(?:,\d+)?)[^\d]{{0,60}}{cantidad_objetivo}\s*(?:unid|u\b|unidades|ejemplares|packs)'
+        match_inv = re.search(patron_inverso, texto_completo, re.IGNORECASE)
+        if match_inv:
+            precio = _limpiar_precio(match_inv.group(1))
+            if precio and precio > 100:
+                return precio, f"Regex cantidad inversa ({cantidad_objetivo})"
+        
+        # Si no encontró la cantidad exacta, intentar buscar otras opciones como fall-back
+        # buscando patrones comunes de cantidad + precio en la página
+        patron_opciones = r'(\d+)\s*(?:unid|u\b|unidades|ejemplares|packs)[^\d\$]{0,40}\$\s*([\d\.]+(?:,\d+)?)'
+        opciones = re.findall(patron_opciones, texto_completo, re.IGNORECASE)
+        if opciones:
+            # Tomar la más cercana numérica o la de mayor cantidad si la que busco no está
+            # (Asumimos que si buscó 1000, una opción de 500 podría servir de fallback)
+            # Como regla básica, tomar la cantidad más alta disponible u ofrecer la primera como fallback
+            mejor_opcion = max(opciones, key=lambda x: int(x[0]) if x[0].isdigit() else 0)
+            precio = _limpiar_precio(mejor_opcion[1])
+            if precio and precio > 100:
+                return precio, f"Fallback Regex opcion mas alta ({mejor_opcion[0]})"
+
+    # Intento 1: Selectores CSS conocidos por plataforma (Fallback si no hay cantidad_objetivo o falló arriba)
     for selector in PRICE_SELECTORS:
         try:
             elementos = page.locator(selector).all()
@@ -74,9 +117,8 @@ def _extraer_precio_pagina(page) -> tuple[Decimal | None, str]:
         except Exception:
             continue
 
-    # Intento 2: Regex contextual — busca precio CERCA de palabras clave
-    try:
-        texto_completo = page.locator('body').inner_text(timeout=8000)
+    # Intento 2: Regex contextual genérica — busca precio CERCA de palabras clave
+    if texto_completo:
         # Buscar precio que esté en la misma línea que palabras de precio
         for patron in [
             r'(?:precio|valor|price|costo)[^\d\n]{0,20}([\d\.]{3,})',
@@ -87,8 +129,6 @@ def _extraer_precio_pagina(page) -> tuple[Decimal | None, str]:
                 precio = _limpiar_precio(match.group(1))
                 if precio and precio > 100:  # filtrar precios absurdamente bajos
                     return precio, "Regex contextual"
-    except Exception:
-        pass
 
     return None, "no encontrado"
 
@@ -260,7 +300,8 @@ def scraping_precios_graficos(self, producto_id):
 
                     # --- Paso 2: Extraer precio en la página del producto ---
                     page.goto(url_producto, wait_until='domcontentloaded', timeout=20000)
-                    precio, metodo = _extraer_precio_pagina(page)
+                    cantidad_objetivo = _extraer_cantidad_objetivo(termino_busqueda)
+                    precio, metodo = _extraer_precio_pagina(page, cantidad_objetivo=cantidad_objetivo)
 
                     if precio:
                         precios_a_guardar.append({
@@ -320,9 +361,9 @@ def scraping_precios_graficos(self, producto_id):
         estado_final = 'ERROR' if errores == len(urls_semilla) else ('ADVERTENCIA' if (errores + avisos) > 0 else 'EXITO')
 
         HistorialScraping.objects.create(
-            producto=producto,
+            producto_scrapeado=producto.nombre,
             estado=estado_final,
-            log='\n'.join(resultados)
+            detalles='\n'.join(resultados)
         )
 
         return '\n'.join(resultados)
