@@ -11,6 +11,16 @@
       "sourceType": "github",
       "computedHash": "faea8440a30aeb78039e504898889b36f25a10eb26331b2d78cbd3ff26e4560d"
     },
+    "schema-markup": {
+      "source": "coreyhaines31/marketingskills",
+      "sourceType": "github",
+      "computedHash": "6319ded25235292939050de1c51a98c6633d79f793396506eda2fa8265343758"
+    },
+    "seo-audit": {
+      "source": "coreyhaines31/marketingskills",
+      "sourceType": "github",
+      "computedHash": "ec3109d213dde1747614ad1112ef0e498e04b24e464538968e156dfbfadb2121"
+    },
     "tailwind-design-system": {
       "source": "wshobson/agents",
       "sourceType": "github",

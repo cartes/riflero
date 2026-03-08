@@ -5,6 +5,65 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PrintFlow - Herramienta fácil para personas reales</title>
+    <link rel="canonical" href="https://riflero.cl/" />
+    <!-- Schema.org JSON-LD -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://riflero.cl/#organizacion",
+          "name": "Riflero.cl",
+          "alternateName": "PrintFlow",
+          "url": "https://riflero.cl",
+          "description": "Marketplace SaaS para imprentas y talleres de impresión en Chile. Conecta a clientes con imprentas locales verificadas para cotizar y comprar servicios de impresión profesional.",
+          "areaServed": {
+            "@type": "Country",
+            "name": "Chile"
+          },
+          "foundingLocation": {
+            "@type": "Country",
+            "name": "Chile"
+          }
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://riflero.cl/#sitio",
+          "name": "Riflero.cl",
+          "url": "https://riflero.cl",
+          "publisher": {
+            "@id": "https://riflero.cl/#organizacion"
+          },
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://riflero.cl/buscar/?q={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "SoftwareApplication",
+          "name": "PrintFlow",
+          "applicationCategory": "BusinessApplication",
+          "operatingSystem": "Web",
+          "url": "https://riflero.cl",
+          "description": "Plataforma para que imprentas creen su tienda online con catálogo, pagos y radar de precios competitivos.",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "CLP",
+            "description": "Crea tu tienda gratis"
+          },
+          "publisher": {
+            "@id": "https://riflero.cl/#organizacion"
+          }
+        }
+      ]
+    }
+    </script>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link

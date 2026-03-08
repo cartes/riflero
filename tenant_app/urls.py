@@ -1,7 +1,19 @@
 from django.urls import path, reverse_lazy
 from django.contrib.auth import views as auth_views
+from django.contrib.sitemaps.views import sitemap
 from . import views
 from . import api_views
+from .sitemaps import TiendaProductosSitemap
+
+
+def _tenant_sitemap_view(request):
+    """
+    Wrapper que instancia el sitemap con el request actual para acceder al tenant.
+    Permite que cada subdominio sirva su propio sitemap.xml.
+    """
+    sitemaps = {'productos': TiendaProductosSitemap(request=request)}
+    return sitemap(request, sitemaps=sitemaps, content_type='application/xml')
+
 
 urlpatterns = [
     # Ruta raíz atrapada por el middleware
@@ -31,5 +43,8 @@ urlpatterns = [
     # API endpoints (Checkout & Fetchs)
     path('api/checkout/', api_views.api_checkout_transparent, name='api_checkout'),
     path('api/comunas/', api_views.api_get_comunas, name='api_comunas'),
+
+    # SEO: Sitemap dinámico por tenant
+    path('sitemap.xml', _tenant_sitemap_view, name='django.contrib.sitemaps.views.sitemap'),
 ]
 

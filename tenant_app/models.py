@@ -126,6 +126,29 @@ class Tienda(models.Model):
         ),
     )
 
+    # SEO por subdominio
+    seo_title = models.CharField(
+        _('título SEO'),
+        max_length=70,
+        blank=True,
+        null=True,
+        help_text=_(
+            'Título que aparece en los resultados de búsqueda de Google. '
+            'Máximo 70 caracteres. Si está vacío se usa el nombre de la tienda.'
+        ),
+    )
+
+    seo_description = models.CharField(
+        _('descripción SEO'),
+        max_length=160,
+        blank=True,
+        null=True,
+        help_text=_(
+            'Descripción que aparece bajo el título en los resultados de búsqueda. '
+            'Máximo 160 caracteres.'
+        ),
+    )
+
     # Configuración Mercado Pago (Marketplace / Split Payments)
     mp_vendedor_id = models.CharField(
         _('ID de vendedor en Mercado Pago'),

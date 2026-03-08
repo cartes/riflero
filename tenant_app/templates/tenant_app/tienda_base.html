@@ -3,7 +3,75 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{{ tienda.nombre_tienda }} - Catálogo</title>
+    <title>{{ tienda.seo_title|default:tienda.nombre_tienda }}</title>
+    <meta name="description" content="{% if tienda.seo_description %}{{ tienda.seo_description }}. Ubicados en {{ tienda.comuna }}.{% else %}Somos la imprenta {{ tienda.nombre_tienda }}, estamos ubicados en la comuna de {{ tienda.comuna }}.{% endif %}" />
+    <link rel="canonical" href="{{ request.build_absolute_uri }}" />
+    <!-- Schema.org JSON-LD -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": ["LocalBusiness", "Store"],
+          "@id": "{{ tienda.url_base }}/#negocio",
+          "name": "{{ tienda.nombre_tienda|escapejs }}",
+          "url": "{{ tienda.url_base }}",
+          "description": "{% if tienda.seo_description %}{{ tienda.seo_description|escapejs }}{% else %}Imprenta {{ tienda.nombre_tienda|escapejs }}, servicios de impresión profesionales en {{ tienda.comuna }}.{% endif %}",
+          {% if tienda.taller_fisico and tienda.comuna %}"address": {
+            "@type": "PostalAddress",
+            "addressLocality": "{{ tienda.comuna.nombre|escapejs }}",
+            "addressRegion": "{{ tienda.comuna.provincia.region.nombre|escapejs }}",
+            "addressCountry": "CL"{% if tienda.direccion %},
+            "streetAddress": "{{ tienda.direccion|escapejs }}"{% endif %}
+          },{% endif %}
+          {% if tienda.comuna %}"areaServed": {
+            "@type": "City",
+            "name": "{{ tienda.comuna.nombre|escapejs }}"
+          },{% endif %}
+          "priceRange": "$",
+          "currenciesAccepted": "CLP",
+          "paymentAccepted": "Tarjeta de crédito, Tarjeta de débito"
+        },
+        {
+          "@type": "WebSite",
+          "@id": "{{ tienda.url_base }}/#sitio",
+          "name": "{{ tienda.nombre_tienda|escapejs }}",
+          "url": "{{ tienda.url_base }}"
+        }{% if productos %},
+        {
+          "@type": "ItemList",
+          "name": "Catálogo de productos de {{ tienda.nombre_tienda|escapejs }}",
+          "numberOfItems": {{ productos|length }},
+          "itemListElement": [
+            {% for p in productos %}{
+              "@type": "ListItem",
+              "position": {{ forloop.counter }},
+              "item": {
+                "@type": "Product",
+                "name": "{{ p.nombre|escapejs }}",
+                {% if p.imagen %}"image": "{{ request.scheme }}://{{ request.get_host }}{{ p.imagen.url }}",{% endif %}
+                "description": "Servicio de impresión de alta calidad ofrecido por {{ tienda.nombre_tienda|escapejs }}.",
+                "brand": {
+                  "@type": "Brand",
+                  "name": "{{ tienda.nombre_tienda|escapejs }}"
+                },
+                "offers": {
+                  "@type": "Offer",
+                  "price": "{{ p.precio_final|floatformat:0 }}",
+                  "priceCurrency": "CLP",
+                  "availability": "https://schema.org/InStock",
+                  "seller": {
+                    "@id": "{{ tienda.url_base }}/#negocio"
+                  }
+                }
+              }
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+          ]
+        }{% endif %}
+      ]
+    }
+    </script>
     <!-- Tailwind CSS (via CDN para MVP) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link
@@ -151,9 +219,10 @@
         <p class="text-center text-sm text-gray-500">
           &copy; 2026 {{ tienda.nombre_tienda }}. Todos los derechos reservados.
           <br />
-          <span class="text-xs text-gray-400 mt-2 block"
-            >Powered by Riflero.cl</span
-          >
+          <a
+            href="https://riflero.cl"
+            class="text-xs text-gray-400 mt-2 block hover:text-indigo-500 transition-colors"
+          >Tecnología impulsada por <strong>Riflero.cl</strong> — Crea tu tienda gratis</a>
         </p>
       </div>
     </footer>

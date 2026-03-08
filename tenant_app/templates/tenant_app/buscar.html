@@ -4,6 +4,48 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Buscar Imprentas en PrintFlow</title>
+    <link rel="canonical" href="https://riflero.cl/buscar/" />
+    <!-- Schema.org JSON-LD -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebPage",
+          "@id": "https://riflero.cl/buscar/#pagina",
+          "name": "Buscar Imprentas{% if query %} — {{ query|escapejs }}{% endif %}",
+          "description": "Directorio de imprentas verificadas en Chile. Busca servicios de impresión por producto y comuna.",
+          "url": "https://riflero.cl/buscar/",
+          "isPartOf": {
+            "@id": "https://riflero.cl/#sitio"
+          }
+        }{% if resultados %},
+        {
+          "@type": "ItemList",
+          "name": "Imprentas para {{ query|escapejs }} en Chile",
+          "description": "Resultados de búsqueda para '{{ query|escapejs }}' en Riflero.cl",
+          "numberOfItems": {{ resultados|length }},
+          "itemListElement": [
+            {% for item in resultados %}{
+              "@type": "ListItem",
+              "position": {{ forloop.counter }},
+              "item": {
+                "@type": "LocalBusiness",
+                "name": "{{ item.tienda.nombre_tienda|escapejs }}",
+                "url": "https://{{ item.tienda.subdominio }}.riflero.cl"{% if item.tienda.comuna %},
+                "address": {
+                  "@type": "PostalAddress",
+                  "addressLocality": "{{ item.tienda.comuna.nombre|escapejs }}",
+                  "addressCountry": "CL"
+                }{% endif %}
+              }
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+          ]
+        }{% endif %}
+      ]
+    }
+    </script>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link
