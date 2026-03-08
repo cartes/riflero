@@ -97,6 +97,14 @@ class Tienda(models.Model):
         help_text=_('Comuna donde opera principalmente la tienda.'),
     )
 
+    direccion = models.CharField(
+        _('dirección'),
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text=_('Dirección física para retiro de pedidos.'),
+    )
+
     taller_fisico = models.BooleanField(
         _('tiene taller físico'),
         default=True,
@@ -267,6 +275,14 @@ class ProductoTienda(models.Model):
         default=dict,
         blank=True,
         help_text=_('Atributos dinámicos del producto (colores, tamaños, características extra).'),
+    )
+
+    imagen = models.ImageField(
+        _('imagen de vista previa'),
+        upload_to='productos/',
+        null=True,
+        blank=True,
+        help_text=_('Imagen para mostrar en el catálogo de la tienda.')
     )
 
     orden_visual = models.IntegerField(

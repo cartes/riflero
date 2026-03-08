@@ -266,6 +266,12 @@ def editar_producto(request, producto_id):
                 producto.precio_base = float(precio_base)
             except ValueError:
                 pass
+        
+        # Manejo de Imagen
+        nueva_imagen = request.FILES.get('imagen')
+        if nueva_imagen:
+            producto.imagen = nueva_imagen
+            
         producto.save()
         messages.success(request, 'Producto actualizado correctamente.')
         return redirect('dashboard_productos')
@@ -289,8 +295,28 @@ def ajustes_view(request):
         tienda = request.user.tienda
     except AttributeError:
         return redirect('index')
+    
+    from tenant_app.models import Comuna
+    
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre_tienda', '').strip()
+        comuna_id = request.POST.get('comuna_id')
+        direccion = request.POST.get('direccion', '').strip()
         
-    return render(request, 'tenant_app/ajustes.html', {'tienda': tienda})
+        if nombre:
+            tienda.nombre_tienda = nombre
+        if comuna_id:
+            tienda.comuna_id = comuna_id
+        tienda.direccion = direccion
+        tienda.save()
+        messages.success(request, 'Ajustes del taller actualizados correctamente.')
+        return redirect('dashboard_ajustes')
+        
+    comunas = Comuna.objects.all().order_by('nombre')
+    return render(request, 'tenant_app/ajustes.html', {
+        'tienda': tienda,
+        'comunas': comunas
+    })
 
 class CustomPasswordChangeView(SuccessMessageMixin, auth_views.PasswordChangeView):
     template_name = 'tenant_app/password_change.html'

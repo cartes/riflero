@@ -28,22 +28,27 @@
           </div>
           <div class="flex items-center space-x-4">
             {% if tienda.taller_fisico %}
-            <span
-              class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
-            >
-              <svg
-                class="-ml-1 mr-1.5 h-4 w-4 text-green-600"
-                fill="currentColor"
-                viewBox="0 0 20 20"
+            <div class="flex flex-col items-end">
+              <span
+                class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
               >
-                <path
-                  fill-rule="evenodd"
-                  d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-              Retiro en {{ tienda.comuna_base }}
-            </span>
+                <svg
+                  class="-ml-1 mr-1.5 h-3 w-3 text-green-600"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                Retiro en Local
+              </span>
+              <span class="text-xs text-gray-500 mt-1">
+                {{ tienda.direccion|default:tienda.comuna.nombre }}
+              </span>
+            </div>
             {% endif %}
           </div>
         </div>
@@ -69,31 +74,32 @@
         >
           <!-- Placeholder Image -->
           <div class="aspect-w-4 aspect-h-3 bg-gray-200 overflow-hidden">
-            <div
-              class="flex items-center justify-center h-48 bg-gray-100 text-gray-400"
-            >
-              <svg
-                class="h-12 w-12"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="1.5"
-                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-            </div>
+            {% if p.imagen %}
+              <img src="{{ p.imagen.url }}" alt="{{ p.nombre }}" class="h-48 w-full object-cover">
+            {% else %}
+              <div class="flex items-center justify-center h-48 bg-gray-100 text-gray-400">
+                <svg
+                  class="h-12 w-12"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="1.5"
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+              </div>
+            {% endif %}
           </div>
           <!-- Content -->
           <div class="p-6">
             <h3 class="text-lg font-semibold text-gray-900">
               <!-- El nombre del producto vendría de los metadatos o una relación. 
                              Por ahora mostramos producto base o un placeholder. -->
-              {% if p.metadatos and p.metadatos.nombre %} {{ p.metadatos.nombre
-              }} {% else %} Producto ID: {{ p.id }} {% endif %}
+              {{ p.nombre }}
             </h3>
             <p class="mt-1 text-sm text-gray-500">Impresión de alta calidad.</p>
             <div class="mt-4 flex items-center justify-between">
@@ -101,7 +107,7 @@
                 ${{ p.precio_final|floatformat:0 }}
               </p>
               <button
-                onclick="abrirModalPago('{{ p.id }}', '{% if p.metadatos and p.metadatos.nombre %}{{ p.metadatos.nombre }}{% else %}Producto ID: {{ p.id }}{% endif %}', '{{ p.precio_final|floatformat:0 }}')"
+                onclick="abrirModalPago('{{ p.id }}', '{{ p.nombre|escapejs }}', '{{ p.precio_final|floatformat:0 }}')"
                 class="inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
               >
                 Comprar
@@ -249,7 +255,6 @@
         const settings = {
           initialization: {
             amount: parseInt(monto),
-            preferenceId: "<PREFERENCE_ID>", // Opcional para Card Payment básico
           },
           customization: {
             visual: {
@@ -267,8 +272,13 @@
               },
             },
             paymentMethods: {
-              maxInstallments: 1, // Pago único para MVP
+              maxInstallments: 1,
             },
+            forms: {
+              card: {
+                autoComplete: false, // Evitar que el navegador autocompleta con datos guardados
+              }
+            }
           },
           callbacks: {
             onReady: () => {
