@@ -1,6 +1,17 @@
 from django.contrib import admin
 
-from .models import Tienda, ProductoTienda, RadarPrecio, Orden, ProductoGlobal, CompetidorScraping, HistorialScraping, ProveedorCompetencia
+from .models import ClienteFinal, Tienda, ProductoTienda, RadarPrecio, Orden, ProductoGlobal, CompetidorScraping, HistorialScraping, ProveedorCompetencia
+
+
+@admin.register(ClienteFinal)
+class ClienteFinalAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'usuario__email', 'telefono', 'creado_en')
+    search_fields = ('usuario__email', 'usuario__first_name', 'usuario__last_name', 'telefono')
+    readonly_fields = ('creado_en', 'actualizado_en')
+
+    def usuario__email(self, obj):
+        return obj.usuario.email
+    usuario__email.short_description = 'Correo'
 
 
 
@@ -297,7 +308,7 @@ class OrdenAdmin(admin.ModelAdmin):
             'fields': ('tienda', 'producto', 'monto_total', 'estado_pago', 'mp_payment_id'),
         }),
         ('Datos Cliente', {
-            'fields': ('nombre_cliente', 'email_cliente'),
+            'fields': ('nombre_cliente', 'email_cliente', 'comprador'),
         }),
         ('Auditoría', {
             'classes': ('collapse',),

@@ -149,6 +149,42 @@ class Tienda(models.Model):
         ),
     )
 
+    # Apariencia de la tienda pública (White Label)
+    PLANTILLA_CHOICES = [
+        ('minimalista', _('Minimalista')),
+        ('moderno_oscuro', _('Moderno Oscuro')),
+        ('creativo', _('Creativo')),
+    ]
+    plantilla_diseno = models.CharField(
+        _('plantilla de diseño'),
+        max_length=20,
+        choices=PLANTILLA_CHOICES,
+        default='minimalista',
+        help_text=_(
+            'Tema visual para la tienda pública del subcontratista. '
+            'Cada plantilla define el esquema de colores y estilo general.'
+        ),
+    )
+
+    color_primario = models.CharField(
+        _('color primario de marca'),
+        max_length=7,
+        default='#2563EB',
+        help_text=_(
+            'Color principal de la tienda en formato HEX (ej: #2563EB). '
+            'Se usa en botones, acentos y el hero de la tienda pública.'
+        ),
+    )
+    color_secundario = models.CharField(
+        _('color secundario de marca'),
+        max_length=7,
+        default='#4f46e5',
+        help_text=_(
+            'Color de apoyo en formato HEX (ej: #4f46e5). '
+            'Se usa en degradados y elementos de hover.'
+        ),
+    )
+
     # Configuración Mercado Pago (Marketplace / Split Payments)
     mp_vendedor_id = models.CharField(
         _('ID de vendedor en Mercado Pago'),
@@ -527,6 +563,45 @@ def actualizar_precio_dinamico(sender, instance, created, **kwargs):
 
 
 # ===========================================================================
+# CLIENTES FINALES (COMPRADORES B2C)
+# ===========================================================================
+class ClienteFinal(models.Model):
+    """
+    Perfil extendido del comprador final. Un solo perfil global por usuario,
+    válido en todos los subdominios de la plataforma.
+    """
+    usuario = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name='perfil_cliente',
+        verbose_name=_('usuario'),
+        help_text=_('Cuenta de acceso asociada a este comprador.'),
+    )
+    telefono = models.CharField(
+        _('teléfono'),
+        max_length=20,
+        blank=True,
+        help_text=_('Número de contacto del comprador.'),
+    )
+    direccion_envio = models.CharField(
+        _('dirección de envío'),
+        max_length=255,
+        blank=True,
+        help_text=_('Dirección predeterminada para despachos.'),
+    )
+    creado_en = models.DateTimeField(_('creado en'), auto_now_add=True)
+    actualizado_en = models.DateTimeField(_('actualizado en'), auto_now=True)
+
+    class Meta:
+        verbose_name = _('cliente final')
+        verbose_name_plural = _('clientes finales')
+
+    def __str__(self):
+        nombre = self.usuario.get_full_name() or self.usuario.email
+        return nombre
+
+
+# ===========================================================================
 # ORDENES / COMPRAS
 # ===========================================================================
 class Orden(models.Model):
@@ -577,6 +652,15 @@ class Orden(models.Model):
     email_cliente = models.EmailField(
         _('email del cliente')
     )
+    comprador = models.ForeignKey(
+        'ClienteFinal',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='ordenes',
+        verbose_name=_('comprador'),
+        help_text=_('Cliente final que realizó la compra. Nulo si fue un pago sin cuenta.'),
+    )
     
     # Auditoría
     creado_en = models.DateTimeField(_('creado en'), auto_now_add=True)
@@ -590,6 +674,7 @@ class Orden(models.Model):
             models.Index(fields=['tienda', '-creado_en']),
             models.Index(fields=['estado_pago']),
             models.Index(fields=['mp_payment_id']),
+            models.Index(fields=['comprador']),
         ]
 
     def __str__(self):

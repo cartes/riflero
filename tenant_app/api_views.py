@@ -2,7 +2,7 @@ import json
 from decimal import Decimal
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from tenant_app.models import Tienda, ProductoTienda, Orden
+from tenant_app.models import ClienteFinal, Tienda, ProductoTienda, Orden
 from tenant_app.services.mercadopago_service import MercadoPagoService
 
 @csrf_exempt
@@ -39,7 +39,16 @@ def api_checkout_transparent(request):
 
         # El precio_final es calculado on-the-fly (precio_base * (1 + margen_ganancia/100))
         monto_total = producto.precio_final
-        
+
+        # Obtener o crear el perfil ClienteFinal si el usuario está autenticado
+        comprador = None
+        if request.user.is_authenticated:
+            comprador, _ = ClienteFinal.objects.get_or_create(usuario=request.user)
+            if not nombre_cliente or nombre_cliente == 'Cliente Tienda':
+                nombre_cliente = request.user.get_full_name() or request.user.email
+            if not email_cliente:
+                email_cliente = request.user.email
+
         # 1. Crear Orden en estado pendiente en nuestra Base de Datos local
         orden = Orden.objects.create(
             tienda=tienda,
@@ -47,7 +56,8 @@ def api_checkout_transparent(request):
             monto_total=monto_total,
             estado_pago='pendiente',
             nombre_cliente=nombre_cliente,
-            email_cliente=email_cliente
+            email_cliente=email_cliente,
+            comprador=comprador,
         )
 
         # 2. Llamar al servicio de Mercado Pago para procesar tarjeta + aplicar Split de pagos

@@ -17,4 +17,6 @@ def sidebar_context(request):
         'is_productos': url_name in ('dashboard_productos', 'agregar_producto_catalogo', 'editar_producto'),
         'is_ventas': url_name == 'dashboard_ventas',
         'is_ajustes': url_name in ('dashboard_ajustes', 'password_change'),
+        'is_apariencia': url_name == 'ajustes_apariencia',
+        'is_ajustes_group': url_name in ('dashboard_ajustes', 'password_change', 'ajustes_apariencia'),
     }

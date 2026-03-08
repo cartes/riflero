@@ -118,6 +118,26 @@
               </span>
             </div>
             {% endif %}
+            <!-- Cuenta del comprador -->
+            {% if cliente_autenticado %}
+            <a href="/mi-cuenta/"
+              class="inline-flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-indigo-600 transition-colors">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              Mi Cuenta
+            </a>
+            {% else %}
+            <a href="/cliente/login/"
+              class="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-indigo-600 transition-colors">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+              </svg>
+              Iniciar sesión
+            </a>
+            {% endif %}
           </div>
         </div>
       </div>
@@ -174,12 +194,25 @@
               <p class="text-2xl font-bold text-gray-900">
                 ${{ p.precio_final|floatformat:0 }}
               </p>
+              {% if cliente_autenticado %}
               <button
                 onclick="abrirModalPago('{{ p.id }}', '{{ p.nombre|escapejs }}', '{{ p.precio_final|floatformat:0 }}')"
                 class="inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
               >
                 Comprar
               </button>
+              {% else %}
+              <a
+                href="/cliente/login/?next=/"
+                class="inline-flex justify-center items-center px-4 py-2 border border-indigo-200 text-sm font-medium rounded-md text-indigo-700 bg-indigo-50 hover:bg-indigo-100 focus:outline-none transition-colors"
+              >
+                <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                </svg>
+                Iniciar sesión
+              </a>
+              {% endif %}
             </div>
           </div>
         </div>

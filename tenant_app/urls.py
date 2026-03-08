@@ -33,6 +33,8 @@ urlpatterns = [
     path('dashboard/ventas/', views.ventas_view, name='dashboard_ventas'),
     path('dashboard/ajustes/', views.ajustes_view, name='dashboard_ajustes'),
     path('dashboard/ajustes/password/', views.CustomPasswordChangeView.as_view(), name='password_change'),
+    path('dashboard/apariencia/', views.guardar_apariencia, name='guardar_apariencia'),
+    path('dashboard/ajustes/apariencia/', views.apariencia_view, name='ajustes_apariencia'),
     
     path('dashboard/vincular-mp/', views.vincular_mp, name='vincular_mp'),
     path('dashboard/margen/<int:producto_id>/', views.actualizar_margen, name='actualizar_margen'),
@@ -43,6 +45,12 @@ urlpatterns = [
     # API endpoints (Checkout & Fetchs)
     path('api/checkout/', api_views.api_checkout_transparent, name='api_checkout'),
     path('api/comunas/', api_views.api_get_comunas, name='api_comunas'),
+
+    # Portal B2C: autenticación y cuenta del comprador final
+    path('cliente/login/', views.login_cliente_view, name='login_cliente'),
+    path('cliente/registro/', views.registro_cliente_view, name='registro_cliente'),
+    path('cliente/logout/', views.logout_cliente_view, name='logout_cliente'),
+    path('mi-cuenta/', views.mi_cuenta_view, name='mi_cuenta'),
 
     # SEO: Sitemap dinámico por tenant
     path('sitemap.xml', _tenant_sitemap_view, name='django.contrib.sitemaps.views.sitemap'),

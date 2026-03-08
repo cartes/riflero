@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 import re
-from .models import Tienda, Region, Comuna
+from .models import Tienda, Region, Comuna, ClienteFinal
 
 class RegistroTiendaForm(forms.Form):
     """
@@ -120,3 +120,78 @@ class RegistroTiendaForm(forms.Form):
         )
         
         return user, tienda
+
+
+class RegistroClienteForm(forms.Form):
+    """
+    Registro de un comprador final (ClienteFinal). Crea User + ClienteFinal.
+    """
+    _input_class = (
+        'appearance-none block w-full px-4 py-3 border border-gray-200 rounded-xl '
+        'shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 '
+        'focus:ring-indigo-500 focus:border-transparent transition-all sm:text-sm bg-gray-50'
+    )
+
+    nombre = forms.CharField(
+        label='Nombre completo',
+        max_length=150,
+        widget=forms.TextInput(attrs={'placeholder': 'Tu nombre', 'class': _input_class}),
+    )
+    email = forms.EmailField(
+        label='Correo electrónico',
+        widget=forms.EmailInput(attrs={'placeholder': 'tu@email.com', 'class': _input_class}),
+    )
+    telefono = forms.CharField(
+        label='Teléfono (opcional)',
+        max_length=20,
+        required=False,
+        widget=forms.TextInput(attrs={'placeholder': '+56 9 1234 5678', 'class': _input_class}),
+    )
+    password = forms.CharField(
+        label='Contraseña',
+        widget=forms.PasswordInput(attrs={'placeholder': 'Mínimo 8 caracteres', 'class': _input_class}),
+    )
+    confirm_password = forms.CharField(
+        label='Confirmar contraseña',
+        widget=forms.PasswordInput(attrs={'placeholder': 'Repite tu contraseña', 'class': _input_class}),
+    )
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email', '').lower().strip()
+        if User.objects.filter(email__iexact=email).exists():
+            raise ValidationError(
+                'Ya existe una cuenta con este correo. '
+                'Inicia sesión o usa otro correo.'
+            )
+        return email
+
+    def clean(self):
+        cleaned_data = super().clean()
+        pwd = cleaned_data.get('password', '')
+        cpwd = cleaned_data.get('confirm_password', '')
+        if pwd and len(pwd) < 8:
+            self.add_error('password', 'La contraseña debe tener al menos 8 caracteres.')
+        if pwd and cpwd and pwd != cpwd:
+            self.add_error('confirm_password', 'Las contraseñas no coinciden.')
+        return cleaned_data
+
+    def save(self):
+        """Crea el User de Django y el perfil ClienteFinal asociado."""
+        email = self.cleaned_data['email'].lower().strip()
+        nombre = self.cleaned_data['nombre'].strip()
+        partes = nombre.split(' ', 1)
+        first_name = partes[0]
+        last_name = partes[1] if len(partes) > 1 else ''
+
+        user = User.objects.create_user(
+            username=email,
+            email=email,
+            password=self.cleaned_data['password'],
+            first_name=first_name,
+            last_name=last_name,
+        )
+        cliente = ClienteFinal.objects.create(
+            usuario=user,
+            telefono=self.cleaned_data.get('telefono', ''),
+        )
+        return user, cliente

@@ -14,8 +14,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.decorators.http import require_POST
 
-from tenant_app.forms import RegistroTiendaForm
-from tenant_app.models import Orden, ProductoGlobal, ProductoTienda, RadarPrecio, Tienda
+from tenant_app.forms import RegistroClienteForm, RegistroTiendaForm
+from tenant_app.models import ClienteFinal, Orden, ProductoGlobal, ProductoTienda, RadarPrecio, Tienda
 
 logger = logging.getLogger(__name__)
 
@@ -34,16 +34,25 @@ def index(request):
 
 def render_vista_tienda(request):
     """
-    Renderiza el catálogo público de un subcontratista específico (request.tenant).
+    Renderiza el catálogo público de un subcontratista (request.tenant).
+    El template se elige dinámicamente según `tienda.plantilla_diseno`.
     """
     tienda = request.tenant
     productos = ProductoTienda.objects.filter(tienda=tienda).select_related('tienda__comuna')
-    
+
+    template_map = {
+        'minimalista': 'tenant_app/theme_minimalista.html',
+        'moderno_oscuro': 'tenant_app/theme_moderno_oscuro.html',
+        'creativo': 'tenant_app/theme_creativo.html',
+    }
+    template_name = template_map.get(tienda.plantilla_diseno, 'tenant_app/theme_minimalista.html')
+
     context = {
         'tienda': tienda,
         'productos': productos,
+        'cliente_autenticado': request.user.is_authenticated and hasattr(request.user, 'perfil_cliente'),
     }
-    return render(request, 'tenant_app/tienda_base.html', context)
+    return render(request, template_name, context)
 
 
 def render_vista_landing(request):
@@ -318,10 +327,81 @@ def ajustes_view(request):
         'comunas': comunas
     })
 
+@login_required(login_url='login')
+@require_POST
+def guardar_apariencia(request):
+    """Guarda la plantilla de diseño y colores de marca (POST legacy, redirige a apariencia_view)."""
+    import re
+    try:
+        tienda = request.user.tienda
+    except AttributeError:
+        messages.error(request, 'No tienes un Taller vinculado a esta cuenta.')
+        return redirect('index')
+
+    plantilla = request.POST.get('plantilla_diseno', 'minimalista')
+    opciones_validas = [c[0] for c in Tienda.PLANTILLA_CHOICES]
+    if plantilla not in opciones_validas:
+        messages.error(request, 'Plantilla no válida.')
+        return redirect('dashboard')
+
+    hex_re = re.compile(r'^#[0-9A-Fa-f]{6}$')
+    color_primario = request.POST.get('color_primario', '').strip()
+    color_secundario = request.POST.get('color_secundario', '').strip()
+
+    tienda.plantilla_diseno = plantilla
+    if hex_re.match(color_primario):
+        tienda.color_primario = color_primario
+    if hex_re.match(color_secundario):
+        tienda.color_secundario = color_secundario
+
+    tienda.save(update_fields=['plantilla_diseno', 'color_primario', 'color_secundario'])
+    messages.success(request, '¡Apariencia actualizada! Tu tienda ya luce con el nuevo diseño.')
+    return redirect('ajustes_apariencia')
+
+
+@login_required(login_url='login')
+def apariencia_view(request):
+    """Vista GET/POST de configuración de apariencia (plantilla + colores de marca)."""
+    import re
+    try:
+        tienda = request.user.tienda
+    except AttributeError:
+        messages.error(request, 'No tienes un Taller vinculado a esta cuenta.')
+        return redirect('index')
+
+    if request.method == 'POST':
+        plantilla = request.POST.get('plantilla_diseno', 'minimalista')
+        opciones_validas = [c[0] for c in Tienda.PLANTILLA_CHOICES]
+        if plantilla not in opciones_validas:
+            messages.error(request, 'Plantilla no válida.')
+        else:
+            hex_re = re.compile(r'^#[0-9A-Fa-f]{6}$')
+            color_primario = request.POST.get('color_primario', '').strip()
+            color_secundario = request.POST.get('color_secundario', '').strip()
+
+            tienda.plantilla_diseno = plantilla
+            if hex_re.match(color_primario):
+                tienda.color_primario = color_primario
+            if hex_re.match(color_secundario):
+                tienda.color_secundario = color_secundario
+
+            tienda.save(update_fields=['plantilla_diseno', 'color_primario', 'color_secundario'])
+            messages.success(request, '¡Apariencia actualizada! Tu tienda ya luce con el nuevo diseño.')
+        return redirect('ajustes_apariencia')
+
+    return render(request, 'tenant_app/ajustes_apariencia.html', {'tienda': tienda})
+
+
 class CustomPasswordChangeView(SuccessMessageMixin, auth_views.PasswordChangeView):
     template_name = 'tenant_app/password_change.html'
     success_url = reverse_lazy('dashboard_ajustes')
     success_message = "Tu contraseña ha sido actualizada exitosamente."
+
+    @classmethod
+    def as_view(cls, **kwargs):
+        from django.contrib.auth.decorators import login_required
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(view)
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -503,3 +583,105 @@ def crear_producto_personalizado(request):
             return redirect('agregar_producto_catalogo')
 
     return redirect('agregar_producto_catalogo')
+
+
+# ===========================================================================
+# AUTENTICACIÓN Y PORTAL PARA CLIENTES FINALES (B2C)
+# ===========================================================================
+
+def login_cliente_view(request):
+    """
+    Login white-label para compradores en el subdominio de la tienda.
+    Si ya está autenticado con perfil de cliente, redirige a Mi Cuenta.
+    """
+    if not getattr(request, 'tenant', None):
+        from django.http import Http404
+        raise Http404
+
+    if request.user.is_authenticated:
+        ClienteFinal.objects.get_or_create(usuario=request.user)
+        return redirect('mi_cuenta')
+
+    next_url = request.GET.get('next', '/')
+    error = None
+
+    if request.method == 'POST':
+        email = request.POST.get('email', '').lower().strip()
+        password = request.POST.get('password', '')
+        next_url = request.POST.get('next', '/')
+
+        user = authenticate(request, username=email, password=password)
+        if user is not None:
+            login(request, user)
+            ClienteFinal.objects.get_or_create(usuario=user)
+            return redirect(next_url or '/')
+        else:
+            error = 'Correo o contraseña incorrectos. Verifica tus datos.'
+
+    return render(request, 'tenant_app/cliente_login.html', {
+        'tienda': request.tenant,
+        'error': error,
+        'next': next_url,
+    })
+
+
+def registro_cliente_view(request):
+    """
+    Registro white-label para nuevos compradores en el subdominio de la tienda.
+    """
+    if not getattr(request, 'tenant', None):
+        from django.http import Http404
+        raise Http404
+
+    if request.user.is_authenticated:
+        ClienteFinal.objects.get_or_create(usuario=request.user)
+        return redirect('mi_cuenta')
+
+    form = RegistroClienteForm()
+    if request.method == 'POST':
+        form = RegistroClienteForm(request.POST)
+        if form.is_valid():
+            user, _cliente = form.save()
+            login(request, user)
+            messages.success(request, f'¡Bienvenido/a, {user.first_name}! Tu cuenta ha sido creada.')
+            return redirect(request.POST.get('next', '/'))
+
+    return render(request, 'tenant_app/cliente_registro.html', {
+        'tienda': request.tenant,
+        'form': form,
+        'next': request.GET.get('next', '/'),
+    })
+
+
+def logout_cliente_view(request):
+    """Cierra la sesión del cliente y redirige al catálogo de la tienda."""
+    logout(request)
+    return redirect('index')
+
+
+def mi_cuenta_view(request):
+    """
+    Portal 'Mi Cuenta' para el comprador. Muestra historial de órdenes
+    filtrado por el subdominio (tienda) actual. Requiere autenticación.
+    """
+    if not getattr(request, 'tenant', None):
+        from django.http import Http404
+        raise Http404
+
+    if not request.user.is_authenticated:
+        return redirect(f'/cliente/login/?next=/mi-cuenta/')
+
+    cliente, _ = ClienteFinal.objects.get_or_create(usuario=request.user)
+
+    ordenes = (
+        Orden.objects
+        .filter(tienda=request.tenant, comprador=cliente)
+        .select_related('producto')
+        .order_by('-creado_en')
+    )
+
+    return render(request, 'tenant_app/mi_cuenta.html', {
+        'tienda': request.tenant,
+        'cliente': cliente,
+        'ordenes': ordenes,
+    })

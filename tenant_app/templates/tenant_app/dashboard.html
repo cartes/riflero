@@ -1,191 +1,189 @@
 {% extends 'tenant_app/layout_panel.html' %} {% block header_title %}Mi Resumen
 Diario{% endblock %} {% block content %}
+
+<!-- ===== MÉTRICAS CLAVE ===== -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-  <!-- Métrica 1 -->
-  <div
-    class="bg-white overflow-hidden shadow-sm rounded-2xl border border-gray-100 p-6 flex flex-col justify-center transition-all hover:shadow-md"
-  >
+  <!-- Ventas Totales -->
+  <div class="bg-white overflow-hidden shadow-sm rounded-2xl border border-gray-100 p-6 flex flex-col justify-center transition-all hover:shadow-md">
     <dt class="text-sm font-medium text-gray-500 truncate">Ventas Totales</dt>
     <dd class="mt-2 text-4xl font-extrabold text-indigo-600">
       ${{ ventas_totales|default:0|floatformat:0 }}
     </dd>
+    <p class="mt-1 text-xs text-gray-400">Órdenes completadas</p>
   </div>
 
-  <!-- Link Tienda -->
-  <div
-    class="bg-white overflow-hidden shadow-sm rounded-2xl border border-gray-100 p-6 flex flex-col justify-between transition-all hover:shadow-md"
-  >
+  <!-- Link Tienda Pública -->
+  <div class="bg-white overflow-hidden shadow-sm rounded-2xl border border-gray-100 p-6 flex flex-col justify-between transition-all hover:shadow-md">
     <div>
-      <dt class="text-sm font-medium text-gray-500 truncate">
-        Catálogo Público
-      </dt>
-      <dd class="mt-2 text-lg font-bold text-gray-900 break-all">
-        {{ request.scheme }}://{{ tienda.subdominio }}.riflero.cl
+      <dt class="text-sm font-medium text-gray-500 truncate">Catálogo Público</dt>
+      <dd class="mt-2 text-base font-bold text-gray-900 break-all">
+        {{ tienda.subdominio }}.riflero.cl
       </dd>
     </div>
     <div class="mt-4">
-      <a
-        href="{{ request.scheme }}://{{ tienda.subdominio }}.localhost:8000"
-        target="_blank"
-        class="text-sm text-indigo-600 font-medium hover:text-indigo-800 flex items-center"
-      >
-        Visitar Mi Tienda <span class="ml-1">&rarr;</span>
+      <a href="{{ request.scheme }}://{{ tienda.subdominio }}.localhost:8000" target="_blank"
+        class="text-sm text-indigo-600 font-medium hover:text-indigo-800 flex items-center gap-1">
+        Visitar Mi Tienda
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
       </a>
     </div>
   </div>
 
-  <!-- Boton Mercado Pago -->
-  <div
-    class="bg-gradient-to-br from-blue-500 to-indigo-600 overflow-hidden shadow-sm rounded-2xl p-6 flex flex-col justify-between relative group text-white"
-  >
+  <!-- Estado de Pagos MP -->
+  <div class="bg-gradient-to-br from-blue-500 to-indigo-600 overflow-hidden shadow-sm rounded-2xl p-6 flex flex-col justify-between relative group text-white">
     <div class="z-10 relative">
       <h3 class="text-xl font-bold">Estado de Pagos</h3>
       <p class="text-blue-100 text-sm mt-1">
         {% if tienda.mp_vendedor_id %}
-        <span class="flex items-center"
-          ><svg
-            class="w-4 h-4 mr-1 text-green-300"
-            fill="currentColor"
-            viewBox="0 0 20 20"
-          >
-            <path
-              fill-rule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-              clip-rule="evenodd"
-            ></path>
-          </svg>
-          Vinculado a MP</span
-        >
+        <span class="flex items-center gap-1">
+          <svg class="w-4 h-4 text-green-300" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+          Vinculado a MP
+        </span>
         {% else %}
-        <span class="flex items-center"
-          ><svg
-            class="w-4 h-4 mr-1 text-red-300"
-            fill="currentColor"
-            viewBox="0 0 20 20"
-          >
-            <path
-              fill-rule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-              clip-rule="evenodd"
-            ></path>
-          </svg>
-          Falta configurar</span
-        >
+        <span class="flex items-center gap-1">
+          <svg class="w-4 h-4 text-red-300" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+          Falta configurar
+        </span>
         {% endif %}
       </p>
     </div>
     <div class="mt-4 z-10 relative">
-      <a
-        href="{% url 'dashboard_ajustes' %}"
-        class="block text-center w-full bg-white/20 hover:bg-white/30 backdrop-blur border border-white/40 text-white text-sm font-semibold py-2 px-4 rounded-xl transition-colors shadow-sm"
-      >
+      <a href="{% url 'dashboard_ajustes' %}"
+        class="block text-center w-full bg-white/20 hover:bg-white/30 backdrop-blur border border-white/40 text-white text-sm font-semibold py-2 px-4 rounded-xl transition-colors shadow-sm">
         Administrar Cuenta
       </a>
     </div>
-    <svg
-      class="absolute -bottom-4 -right-4 w-32 h-32 text-white opacity-10 group-hover:scale-110 transition-transform duration-500"
-      fill="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path
-        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-2h-2v-2h2v-2H9V9h2V7h2v2h2v2h-2v2h2v2h-2v2h-2z"
-      />
+    <svg class="absolute -bottom-4 -right-4 w-32 h-32 text-white opacity-10 group-hover:scale-110 transition-transform duration-500" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-2h-2v-2h2v-2H9V9h2V7h2v2h2v2h-2v2h2v2h-2v2h-2z"/>
     </svg>
   </div>
 </div>
 
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-  <!-- Columna Izquierda: Bienvenido -->
-  <div
-    class="bg-white px-8 py-10 rounded-2xl shadow-sm border border-gray-100 text-center sticky top-6"
-  >
-    <div
-      class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-indigo-50 mb-4"
-    >
-      <svg
-        class="h-8 w-8 text-indigo-600"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M13 10V3L4 14h7v7l9-11h-7z"
-        ></path>
-      </svg>
+<!-- ===== RADAR DE PRECIOS — PANEL PRINCIPAL ===== -->
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 mb-8">
+  <!-- Header del panel -->
+  <div class="px-6 py-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-indigo-50/60 to-white rounded-t-2xl">
+    <div class="flex items-center gap-3">
+      <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600 shadow-sm shadow-indigo-200">
+        <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+        </svg>
+      </div>
+      <div>
+        <h2 class="text-lg font-bold text-gray-900">Radar de Precios</h2>
+        <p class="text-sm text-gray-500">Precio de la competencia vs. tu precio final</p>
+      </div>
+      <span class="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold text-green-700 bg-green-100 border border-green-200 px-2.5 py-1 rounded-full">
+        <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+        Activo
+      </span>
     </div>
-    <h2 class="text-xl font-bold text-gray-900 mb-2">
-      Bienvenido a tu Espacio de Trabajo
-    </h2>
-    <p class="text-gray-500 max-w-md mx-auto mb-6">
-      Utiliza el menú lateral para gestionar tu catálogo, revisar tus ventas o
-      ajustar la configuración de pagos.
+    <!-- Filtro por producto -->
+    {% if listado_productos %}
+    <form method="GET" class="w-full sm:w-auto">
+      <select name="producto_id" onchange="this.form.submit()"
+        class="block w-full sm:w-60 pl-3 pr-8 py-2 text-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 rounded-xl bg-white shadow-sm text-gray-700">
+        <option value="">— Todos los productos —</option>
+        {% for prod in listado_productos %}
+        <option value="{{ prod.id }}" {% if request.GET.producto_id == prod.id|stringformat:"s" %}selected{% endif %}>{{ prod.nombre }}</option>
+        {% endfor %}
+      </select>
+    </form>
+    {% endif %}
+  </div>
+
+  <!-- Leyenda de columnas -->
+  {% if radar_reciente %}
+  <div class="hidden sm:grid grid-cols-12 px-6 py-3 bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+    <div class="col-span-4">Producto</div>
+    <div class="col-span-3">Competidor</div>
+    <div class="col-span-2 text-right">Precio Comp.</div>
+    <div class="col-span-2 text-right">Tu Precio Final</div>
+    <div class="col-span-1 text-right">Estado</div>
+  </div>
+
+  <ul class="divide-y divide-gray-50">
+    {% for radar in radar_reciente %}
+    {% with mi_precio=radar.producto.precio_final comp_precio=radar.precio_extraido %}
+    <li class="px-6 py-4 hover:bg-gray-50/70 transition-colors">
+      <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-0 items-center">
+        <!-- Producto -->
+        <div class="sm:col-span-4">
+          <p class="text-sm font-semibold text-gray-900 truncate">{{ radar.producto.nombre }}</p>
+          <p class="text-xs text-gray-400 mt-0.5 sm:hidden">{{ radar.competidor_nombre }} · hace {{ radar.fecha_extraccion|timesince }}</p>
+        </div>
+        <!-- Competidor (desktop) -->
+        <div class="hidden sm:block sm:col-span-3">
+          <p class="text-sm text-gray-600 truncate">{{ radar.competidor_nombre }}</p>
+          <p class="text-xs text-gray-400 mt-0.5">hace {{ radar.fecha_extraccion|timesince }}</p>
+        </div>
+        <!-- Precios y estado -->
+        <div class="flex sm:contents items-center justify-between sm:justify-normal gap-2">
+          <!-- Precio Competidor -->
+          <div class="sm:col-span-2 sm:text-right">
+            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-sm font-bold bg-red-50 text-red-700 border border-red-100">
+              ${{ comp_precio|floatformat:0 }}
+            </span>
+          </div>
+          <!-- Tu Precio Final -->
+          <div class="sm:col-span-2 sm:text-right">
+            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-sm font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">
+              ${{ mi_precio|floatformat:0 }}
+            </span>
+          </div>
+          <!-- Estado competitivo -->
+          <div class="sm:col-span-1 sm:text-right flex sm:justify-end items-center gap-1">
+            {% if mi_precio and comp_precio %}
+              {% if mi_precio <= comp_precio %}
+                <span class="inline-flex items-center gap-1 text-xs font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded-full border border-green-200">
+                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                  OK
+                </span>
+              {% else %}
+                <span class="inline-flex items-center gap-1 text-xs font-bold text-orange-700 bg-orange-50 px-2 py-0.5 rounded-full border border-orange-200">
+                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 15l7-7 7 7"/></svg>
+                  Revisar
+                </span>
+              {% endif %}
+            {% endif %}
+            <a href="{{ radar.producto_referencia }}" target="_blank"
+              class="ml-1 text-gray-300 hover:text-indigo-500 transition-colors p-1.5 rounded-full hover:bg-indigo-50" title="Ver fuente">
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </li>
+    {% endwith %}
+    {% endfor %}
+  </ul>
+
+  <!-- Footer -->
+  <div class="px-6 py-4 bg-gray-50 rounded-b-2xl border-t border-gray-100 flex items-center justify-between">
+    <p class="text-xs text-gray-400">
+      <span class="font-semibold text-indigo-600">Radar activo:</span>
+      el precio base se ajusta automáticamente al menor precio detectado en competidores.
     </p>
-    <a
-      href="{% url 'dashboard_productos' %}"
-      class="inline-flex items-center px-6 py-3 border border-transparent shadow-sm text-base font-medium rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
-    >
-      Ir a mis Productos
+    <a href="{% url 'dashboard_productos' %}"
+      class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+      Ver catálogo
+      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
     </a>
   </div>
 
-  <!-- Columna Derecha: Radar de Precios -->
-  <div>
-    {% if radar_reciente or listado_productos %}
-    <div class="mb-6">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
-        <h3 class="text-lg leading-6 font-medium text-gray-900 flex items-center">
-          <svg class="h-5 w-5 mr-2 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-          </svg>
-          Radar de Precios Activo
-        </h3>
-        
-        <form method="GET" class="w-full sm:w-auto">
-          <select name="producto_id" onchange="this.form.submit()" class="block w-full sm:w-64 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-lg border bg-white shadow-sm">
-            <option value="">-- Ver todos mis productos --</option>
-            {% for prod in listado_productos %}
-                <option value="{{ prod.id }}" {% if request.GET.producto_id == prod.id|stringformat:"s" %}selected{% endif %}>{{ prod.nombre }}</option>
-            {% endfor %}
-          </select>
-        </form>
-      </div>
-      
-      {% if radar_reciente %}
-      <div class="bg-white shadow-sm overflow-hidden sm:rounded-xl border border-gray-100">
-        <ul class="divide-y divide-gray-100">
-          {% for radar in radar_reciente %}
-          <li class="px-6 py-4 flex flex-col sm:flex-row sm:items-center hover:bg-gray-50 transition-colors gap-4">
-            <div class="min-w-0 flex-1">
-              <p class="text-sm font-semibold text-gray-900 truncate">{{ radar.producto.nombre }}</p>
-              <p class="text-sm text-gray-500 truncate mt-1">
-                Detectado en <span class="font-medium text-gray-700">{{ radar.competidor_nombre }}</span> hace {{ radar.fecha_extraccion|timesince }}
-              </p>
-            </div>
-            <div class="flex-shrink-0 flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
-              <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-green-100 text-green-800">
-                ${{ radar.precio_extraido|floatformat:0 }}
-              </span>
-              <a href="{{ radar.producto_referencia }}" target="_blank" class="text-gray-400 hover:text-indigo-600 transition-colors p-2 bg-gray-50 rounded-full hover:bg-indigo-50" title="Ver Origen">
-                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
-              </a>
-            </div>
-          </li>
-          {% endfor %}
-        </ul>
-      </div>
-      {% else %}
-        <div class="bg-gray-50 rounded-xl p-8 text-center border border-dashed border-gray-300">
-            <p class="text-gray-500">No hay registros recientes para este producto en el radar.</p>
-        </div>
-      {% endif %}
+  {% else %}
+  <!-- Estado vacío -->
+  <div class="px-6 py-16 text-center">
+    <div class="mx-auto w-16 h-16 rounded-full bg-indigo-50 flex items-center justify-center mb-4">
+      <svg class="w-8 h-8 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+      </svg>
     </div>
-    {% endif %}
+    <p class="text-gray-500 font-medium">Sin datos de radar todavía</p>
+    <p class="text-sm text-gray-400 mt-1 max-w-xs mx-auto">Ejecuta el scraping desde el panel de administración para ver los precios de la competencia aquí.</p>
   </div>
+  {% endif %}
 </div>
+
 {% endblock %}

@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ tienda.seo_title|default:tienda.nombre_tienda }}</title>
+    <meta name="description" content="{% if tienda.seo_description %}{{ tienda.seo_description }}. Ubicados en {{ tienda.comuna }}.{% else %}Somos la imprenta {{ tienda.nombre_tienda }}, estamos ubicados en la comuna de {{ tienda.comuna }}.{% endif %}" />
+    <link rel="canonical" href="{{ request.build_absolute_uri }}" />
+    <!-- Schema.org JSON-LD -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": ["LocalBusiness", "Store"],
+          "@id": "{{ tienda.url_base }}/#negocio",
+          "name": "{{ tienda.nombre_tienda|escapejs }}",
+          "url": "{{ tienda.url_base }}",
+          "description": "{% if tienda.seo_description %}{{ tienda.seo_description|escapejs }}{% else %}Imprenta {{ tienda.nombre_tienda|escapejs }}, servicios de impresión profesionales en {{ tienda.comuna }}.{% endif %}",
+          {% if tienda.taller_fisico and tienda.comuna %}"address": {
+            "@type": "PostalAddress",
+            "addressLocality": "{{ tienda.comuna.nombre|escapejs }}",
+            "addressRegion": "{{ tienda.comuna.provincia.region.nombre|escapejs }}",
+            "addressCountry": "CL"{% if tienda.direccion %},
+            "streetAddress": "{{ tienda.direccion|escapejs }}"{% endif %}
+          },{% endif %}
+          {% if tienda.comuna %}"areaServed": {
+            "@type": "City",
+            "name": "{{ tienda.comuna.nombre|escapejs }}"
+          },{% endif %}
+          "priceRange": "$",
+          "currenciesAccepted": "CLP",
+          "paymentAccepted": "Tarjeta de crédito, Tarjeta de débito"
+        },
+        {
+          "@type": "WebSite",
+          "@id": "{{ tienda.url_base }}/#sitio",
+          "name": "{{ tienda.nombre_tienda|escapejs }}",
+          "url": "{{ tienda.url_base }}"
+        }{% if productos %},
+        {
+          "@type": "ItemList",
+          "name": "Catálogo de productos de {{ tienda.nombre_tienda|escapejs }}",
+          "numberOfItems": {{ productos|length }},
+          "itemListElement": [
+            {% for p in productos %}{
+              "@type": "ListItem",
+              "position": {{ forloop.counter }},
+              "item": {
+                "@type": "Product",
+                "name": "{{ p.nombre|escapejs }}",
+                {% if p.imagen %}"image": "{{ request.scheme }}://{{ request.get_host }}{{ p.imagen.url }}",{% endif %}
+                "description": "Servicio de impresión de alta calidad ofrecido por {{ tienda.nombre_tienda|escapejs }}.",
+                "brand": {"@type": "Brand", "name": "{{ tienda.nombre_tienda|escapejs }}"},
+                "offers": {
+                  "@type": "Offer",
+                  "price": "{{ p.precio_final|floatformat:0 }}",
+                  "priceCurrency": "CLP",
+                  "availability": "https://schema.org/InStock",
+                  "seller": {"@id": "{{ tienda.url_base }}/#negocio"}
+                }
+              }
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+          ]
+        }{% endif %}
+      ]
+    }
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --cp: {{ tienda.color_primario }};
+        --cs: {{ tienda.color_secundario }};
+      }
+      body { font-family: "Inter", sans-serif; }
+      .btn-primary { background-color: var(--cp); color: #fff; transition: opacity .2s; }
+      .btn-primary:hover { opacity: .88; }
+      .accent-border { border-left: 4px solid var(--cp); }
+      .accent-bg { background-color: var(--cp); }
+      .accent-text { color: var(--cp); }
+      .dot-pattern {
+        background-color: #f8fafc;
+        background-image: radial-gradient(var(--cp) 1px, transparent 1px);
+        background-size: 22px 22px;
+        opacity: .35;
+      }
+      .hero-panel {
+        background: linear-gradient(135deg, color-mix(in srgb, var(--cp) 8%, white), color-mix(in srgb, var(--cs) 6%, white));
+      }
+    </style>
+  </head>
+
+  <body class="bg-white text-gray-900 min-h-screen flex flex-col">
+
+    <!-- ===== HEADER ===== -->
+    <header class="bg-white border-b border-gray-100 sticky top-0 z-50">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16 items-center">
+          <a href="/" class="flex items-center gap-2.5">
+            <div class="w-7 h-7 rounded-lg accent-bg flex items-center justify-center flex-shrink-0">
+              <svg class="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/></svg>
+            </div>
+            <span class="text-lg font-semibold text-gray-900 tracking-tight">{{ tienda.nombre_tienda }}</span>
+          </a>
+          <div class="flex items-center gap-5">
+            {% if tienda.taller_fisico %}
+            <div class="hidden sm:flex items-center gap-1.5 text-xs font-medium text-green-700 bg-green-50 border border-green-100 px-3 py-1.5 rounded-full">
+              <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>
+              {{ tienda.direccion|default:tienda.comuna.nombre }}
+            </div>
+            {% endif %}
+            {% if cliente_autenticado %}
+            <a href="/mi-cuenta/" class="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors flex items-center gap-1.5">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+              Mi Cuenta
+            </a>
+            {% else %}
+            <a href="/cliente/login/?next=/" class="text-sm font-medium text-gray-500 hover:text-gray-800 transition-colors">Iniciar sesión</a>
+            <a href="/cliente/registro/" class="inline-flex items-center px-4 py-2 text-sm font-semibold text-white rounded-lg btn-primary">
+              Registrarse
+            </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ===== HERO SPLIT-SCREEN ===== -->
+    <section class="relative overflow-hidden border-b border-gray-100">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 min-h-[480px] items-center gap-0">
+
+          <!-- Columna izquierda: Contenido -->
+          <div class="py-16 lg:py-20 lg:pr-12">
+            <div class="inline-flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-full border mb-6 accent-text"
+              style="border-color: var(--cp); background-color: color-mix(in srgb, var(--cp) 8%, white);">
+              <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+              Imprenta Profesional en Chile
+            </div>
+
+            <h1 class="text-4xl sm:text-5xl font-bold text-gray-900 leading-tight mb-3">
+              {{ tienda.nombre_tienda }}
+            </h1>
+
+            {% if tienda.comuna %}
+            <h2 class="text-base font-medium text-gray-500 mb-5 flex items-center gap-2">
+              <svg class="w-4 h-4 flex-shrink-0 accent-text" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              Ubicados en {{ tienda.comuna.nombre }}, {{ tienda.comuna.provincia.region.nombre }}
+            </h2>
+            {% endif %}
+
+            <p class="text-gray-700 text-lg leading-relaxed mb-8 max-w-lg">
+              {% if tienda.seo_description %}{{ tienda.seo_description }}{% else %}Servicios de impresión de alta calidad para empresas y personas. Cotiza hoy y recibe tu pedido a tiempo.{% endif %}
+            </p>
+
+            <div class="flex flex-col sm:flex-row gap-3">
+              <a href="#catalogo"
+                class="inline-flex items-center justify-center gap-2 px-7 py-3.5 text-base font-semibold text-white rounded-xl btn-primary shadow-md">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                Ver Catálogo de Productos
+              </a>
+              {% if not cliente_autenticado %}
+              <a href="/cliente/registro/"
+                class="inline-flex items-center justify-center gap-2 px-7 py-3.5 text-base font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors">
+                Crear cuenta gratis
+              </a>
+              {% endif %}
+            </div>
+
+            {% if tienda.taller_fisico %}
+            <div class="mt-8 flex items-center gap-2 text-sm text-gray-500">
+              <svg class="w-4 h-4 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+              Retiro en local disponible · {{ tienda.direccion|default:tienda.comuna.nombre }}
+            </div>
+            {% endif %}
+          </div>
+
+          <!-- Columna derecha: Panel decorativo -->
+          <div class="hidden lg:block relative h-full min-h-[480px]">
+            <div class="absolute inset-0 hero-panel">
+              <!-- Patrón de puntos -->
+              <div class="absolute inset-0 dot-pattern"></div>
+            </div>
+            <!-- Tarjetas flotantes decorativas -->
+            <div class="absolute inset-0 flex items-center justify-center">
+              <div class="relative w-72">
+                <div class="bg-white rounded-2xl shadow-xl p-6 mb-4 border border-gray-100">
+                  <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 rounded-xl accent-bg flex items-center justify-center">
+                      <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    </div>
+                    <div>
+                      <p class="text-xs font-semibold text-gray-800">Catálogo disponible</p>
+                      <p class="text-xs text-gray-400">{{ productos|length }} producto{{ productos|length|pluralize }}</p>
+                    </div>
+                  </div>
+                  <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div class="h-2 rounded-full accent-bg" style="width: 78%"></div>
+                  </div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-lg p-5 border border-gray-100 ml-8">
+                  <div class="flex items-center gap-2 mb-2">
+                    <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                    <p class="text-xs font-semibold text-gray-800">Pago 100% seguro</p>
+                  </div>
+                  <p class="text-xs text-gray-500">Procesado por Mercado Pago</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== CATÁLOGO ===== -->
+    <main id="catalogo" class="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-14">
+      <div class="flex items-center justify-between mb-8">
+        <div class="accent-border pl-4">
+          <h2 class="text-2xl font-bold text-gray-900">Catálogo de Productos</h2>
+          <p class="text-sm text-gray-500 mt-1">{{ productos|length }} producto{{ productos|length|pluralize }} disponible{{ productos|length|pluralize }}</p>
+        </div>
+      </div>
+
+      {% if productos %}
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for p in productos %}
+        <div class="group bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col"
+          style="--hover-border: var(--cp);"
+          onmouseenter="this.style.borderColor='var(--cp)'" onmouseleave="this.style.borderColor=''">
+          <!-- Imagen -->
+          <div class="overflow-hidden bg-gray-50">
+            {% if p.imagen %}
+            <img src="{{ p.imagen.url }}" alt="{{ p.nombre }}" class="h-48 w-full object-cover group-hover:scale-105 transition-transform duration-500" />
+            {% else %}
+            <div class="flex items-center justify-center h-48 bg-gray-50">
+              <svg class="h-10 w-10 text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            </div>
+            {% endif %}
+          </div>
+          <!-- Contenido -->
+          <div class="p-6 flex flex-col flex-1 justify-between">
+            <div>
+              <h3 class="text-base font-semibold text-gray-900">{{ p.nombre }}</h3>
+              <p class="text-sm text-gray-500 mt-1">Impresión profesional de alta calidad.</p>
+            </div>
+            <div class="flex items-center justify-between mt-6">
+              <p class="text-2xl font-bold text-gray-900">${{ p.precio_final|floatformat:0 }}</p>
+              {% if cliente_autenticado %}
+              <button onclick="abrirModalPago('{{ p.id }}', '{{ p.nombre|escapejs }}', '{{ p.precio_final|floatformat:0 }}')"
+                class="inline-flex items-center px-4 py-2 text-sm font-semibold text-white rounded-lg btn-primary shadow-sm">
+                Comprar
+              </button>
+              {% else %}
+              <a href="/cliente/login/?next=/" class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border transition-colors accent-text"
+                style="border-color: var(--cp); background-color: color-mix(in srgb, var(--cp) 8%, white);">
+                <svg class="w-3.5 h-3.5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
+                Iniciar sesión
+              </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      {% else %}
+      <div class="text-center py-24 border border-dashed border-gray-200 rounded-2xl bg-gray-50">
+        <svg class="mx-auto h-10 w-10 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
+        <p class="text-sm font-semibold text-gray-500">Sin productos disponibles aún.</p>
+        <p class="text-xs text-gray-400 mt-1">Este taller aún no ha publicado productos.</p>
+      </div>
+      {% endif %}
+    </main>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="border-t border-gray-100 bg-white py-8">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-400">
+        <span>&copy; 2026 {{ tienda.nombre_tienda }}. Todos los derechos reservados.</span>
+        <a href="https://riflero.cl" target="_blank" rel="noopener" class="hover:text-gray-600 transition-colors text-xs">
+          Tecnología impulsada por <strong class="font-semibold text-gray-500">Riflero.cl</strong> — Crea tu tienda gratis
+        </a>
+      </div>
+    </footer>
+
+    <!-- ===== MODAL DE PAGO ===== -->
+    <div id="payment-modal" class="fixed inset-0 z-[100] hidden" role="dialog" aria-modal="true">
+      <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-900/50 transition-opacity" onclick="cerrarModalPago()"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
+          <div class="px-6 pt-6 pb-4">
+            <h3 class="text-lg font-semibold text-gray-900 mb-1">Completar Pago</h3>
+            <p class="text-sm text-gray-500 mb-4">
+              Comprando: <strong id="producto-nombre-modal"></strong> — <strong id="producto-precio-modal"></strong>
+            </p>
+            <div id="cardPaymentBrick_container"></div>
+          </div>
+          <div class="bg-gray-50 px-6 py-4 flex justify-end">
+            <button type="button" onclick="cerrarModalPago()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
+    <script>
+      const mp = new MercadoPago("TEST-bbcc6e58-18e3-4f95-ae75-da822acba8cd", { locale: "es-CL" });
+      let cardPaymentBrickController;
+      let productoSeleccionadoId = null;
+
+      function abrirModalPago(id, nombre, precio) {
+        productoSeleccionadoId = id;
+        document.getElementById("producto-nombre-modal").innerText = nombre;
+        document.getElementById("producto-precio-modal").innerText = "$" + precio;
+        document.getElementById("payment-modal").classList.remove("hidden");
+        renderizarBrickPago(precio);
+      }
+
+      function cerrarModalPago() {
+        document.getElementById("payment-modal").classList.add("hidden");
+        if (cardPaymentBrickController) cardPaymentBrickController.unmount();
+      }
+
+      async function renderizarBrickPago(monto) {
+        const bricksBuilder = mp.bricks();
+        cardPaymentBrickController = await bricksBuilder.create("cardPayment", "cardPaymentBrick_container", {
+          initialization: { amount: parseInt(monto) },
+          customization: {
+            visual: { style: { theme: "default" } },
+            paymentMethods: { maxInstallments: 1 },
+            forms: { card: { autoComplete: false } }
+          },
+          callbacks: {
+            onReady: () => {},
+            onSubmit: (cardFormData) => new Promise((resolve, reject) => {
+              fetch("/api/checkout/", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token: cardFormData.token, producto_id: productoSeleccionadoId, payer_email: cardFormData.payer.email, payer_name: "Cliente Tienda" }),
+              })
+              .then(r => r.json())
+              .then(data => { if (data.error) { alert("Error: " + data.error); reject(); } else { alert("¡Pago exitoso! Orden #" + data.orden_id); cerrarModalPago(); resolve(); } })
+              .catch(() => { alert("Error procesando pago"); reject(); });
+            }),
+            onError: (e) => console.error(e),
+          },
+        });
+      }
+    </script>
+  </body>
+</html>

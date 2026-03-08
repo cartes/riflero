@@ -6,6 +6,11 @@
       "sourceType": "github",
       "computedHash": "a6b8c224017570496d688a526fcbea74025a01cc90d9afb0977bfcc1f76af306"
     },
+    "frontend-design": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "computedHash": "063a0e6448123cd359ad0044cc46b0e490cc7964d45ef4bb9fd842bd2ffbca67"
+    },
     "mercadopago-integration": {
       "source": "martinacostadev/mercadopago-integration",
       "sourceType": "github",
