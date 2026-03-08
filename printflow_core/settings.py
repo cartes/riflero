@@ -70,6 +70,10 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                # Django 6: CSP nonce support
+                'django.template.context_processors.csp',
+                # Custom: sidebar partial variables
+                'tenant_app.context_processors.sidebar_context',
             ],
         },
     },
@@ -96,8 +100,6 @@ DATABASES = {
         },
     }
 }
-
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 # ===========================================================================

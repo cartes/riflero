@@ -302,6 +302,16 @@ class ProductoTienda(models.Model):
         indexes = [
             models.Index(fields=['tienda']),
         ]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(precio_base__gte=0),
+                name='precio_base_no_negativo',
+            ),
+            models.CheckConstraint(
+                condition=models.Q(margen_ganancia__gte=0),
+                name='margen_ganancia_no_negativo',
+            ),
+        ]
 
     def __str__(self) -> str:
         return f'{self.nombre} - {self.tienda.nombre_tienda} (${self.precio_final})'
@@ -440,7 +450,12 @@ class CompetidorScraping(models.Model):
         verbose_name = _('competidor para scraping')
         verbose_name_plural = _('competidores para scraping')
         ordering = ['producto', 'proveedor__nombre']
-        unique_together = ('producto', 'proveedor')
+        constraints = [
+            models.UniqueConstraint(
+                fields=['producto', 'proveedor'],
+                name='unique_producto_proveedor',
+            ),
+        ]
 
     def __str__(self):
         proveedor_nombre = self.proveedor.nombre if self.proveedor else '(sin proveedor)'

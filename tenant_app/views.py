@@ -37,7 +37,7 @@ def render_vista_tienda(request):
     Renderiza el catálogo público de un subcontratista específico (request.tenant).
     """
     tienda = request.tenant
-    productos = ProductoTienda.objects.filter(tienda=tienda)
+    productos = ProductoTienda.objects.filter(tienda=tienda).select_related('tienda__comuna')
     
     context = {
         'tienda': tienda,
@@ -263,8 +263,8 @@ def editar_producto(request, producto_id):
             producto.nombre = nombre
         if precio_base:
             try:
-                producto.precio_base = float(precio_base)
-            except ValueError:
+                producto.precio_base = Decimal(precio_base)
+            except (ValueError, InvalidOperation):
                 pass
         
         # Manejo de Imagen
