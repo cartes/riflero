@@ -26,9 +26,13 @@ ALLOWED_HOSTS = config(
 
 CSRF_TRUSTED_ORIGINS = config(
     'CSRF_TRUSTED_ORIGINS',
-    default='https://riflero.cl,https://*.riflero.cl,https://web-yx0xqes9ksy1.up-de-fra1-k8s-1.apps.run-on-seenode.com/',
+    default='https://riflero.cl,https://*.riflero.cl',
     cast=lambda v: [s.strip() for s in v.split(',')]
 )
+
+# Necesario cuando Django corre detrás de un proxy inverso (Nginx, Kubernetes ingress, etc.)
+# que termina SSL. Sin esto, Django ve las requests como HTTP y falla el chequeo CSRF de origen.
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # ===========================================================================
 # APPLICATIONS
