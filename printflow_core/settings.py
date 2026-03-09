@@ -24,6 +24,12 @@ ALLOWED_HOSTS = config(
     cast=lambda v: [s.strip() for s in v.split(',')]
 )
 
+CSRF_TRUSTED_ORIGINS = config(
+    'CSRF_TRUSTED_ORIGINS',
+    default='https://riflero.cl,https://*.riflero.cl,https://web-yx0xqes9ksy1.up-de-fra1-k8s-1.apps.run-on-seenode.com/',
+    cast=lambda v: [s.strip() for s in v.split(',')]
+)
+
 # ===========================================================================
 # APPLICATIONS
 # ===========================================================================
