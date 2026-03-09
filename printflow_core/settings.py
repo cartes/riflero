@@ -172,3 +172,13 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutos
+
+
+# ===========================================================================
+# SITE / MULTI-TENANT
+# ===========================================================================
+
+# Dominio base para construir URLs de subdominios.
+# En local: localhost:8000  →  {tienda}.localhost:8000
+# En prod:  riflero.cl      →  {tienda}.riflero.cl
+SITE_DOMAIN = config('SITE_DOMAIN', default='localhost:8000')

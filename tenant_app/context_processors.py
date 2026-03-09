@@ -1,14 +1,16 @@
+from django.conf import settings
 from django.urls import reverse
 
 
 def sidebar_context(request):
     """
-    Context processor that provides sidebar link URLs and active states
-    for the Django 6 template partials in layout_panel.html.
+    Context processor that provides sidebar link URLs, active states
+    for layout_panel.html, and SITE_DOMAIN for subdomain URL construction.
     """
     url_name = getattr(getattr(request, 'resolver_match', None), 'url_name', '')
 
     return {
+        'SITE_DOMAIN': settings.SITE_DOMAIN,
         'dashboard_url': reverse('dashboard'),
         'productos_url': reverse('dashboard_productos'),
         'ventas_url': reverse('dashboard_ventas'),
